@@ -6,7 +6,6 @@ The main script, `v2.0.py`, connects to DIgSILENT PowerFactory, activates the co
 
 The generated dataset is intended for machine-learning workflows where grid topology, switched admittance matrices, relay corridor features, distributed-generation context, and Zone 1/2/3 relay reach targets are required.
 
-\
 
 ## What the script does
 
@@ -53,8 +52,6 @@ The pipeline performs the following operations:
    * Creates an `.xlsx` audit file.
    * Saves metadata, statistics, and randomization logs.
 
-\
-
 ## Software requirements
 
 Use **Python 3.9**, because the script is configured for **DIgSILENT PowerFactory 2023 SP3 Python 3.9**.
@@ -67,8 +64,6 @@ Recommended `requirements.txt`:
 pandas
 pyarrow
 ```
-
-\
 
 ## Installation
 
@@ -93,8 +88,6 @@ Install all requirements with pip
 pip install -r requirements.txt
 ```
 
-\
-
 ## PowerFactory configuration
 
 Before running the script, check the `Config` class in `v2.0.py`.
@@ -118,8 +111,6 @@ Update these values if the supervisor's system uses a different PowerFactory ins
 |`ZONE3_REACH_FACTOR`|Zone 3 downstream branch multiplier, currently `1.20`|
 
 > Note: the script file is named `v2.0.py`, but the internal `DATASET_VERSION` value should also be checked before a final run. If the exported metadata should say `v2.0`, update `DATASET_VERSION` accordingly.
-
-\
 
 ## Expected folder structure
 
@@ -158,8 +149,6 @@ This means:
 * `Switch_state.csv` is expected one directory above the script folder, under `Results/Switch State/`;
 * if `v2.0.py` is moved, the location of `Switch_state.csv` changes accordingly.
 
-\
-
 ## Switch-state input file
 
 The script expects the switch-state configuration file at:
@@ -189,8 +178,6 @@ Rules:
 
 > Note: the script reads the `.csv` file with automatic delimiter detection. However, the provided `Switch_state.csv` uses semicolons, so the recommended format is semicolon-separated. 
 If `MAX_SWITCH_STATE_CONFIG_COUNT` is set in `Config`, only the first selected number of switch-state rows are processed.
-
-\
 
 ## Scenario-generation settings
 
