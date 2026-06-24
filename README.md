@@ -140,13 +140,6 @@ OUTPUT_DIR = SCRIPT_DIR
 RESULTS_DIR = PROJECT_ROOT / "Results"
 SWITCH_STATE_FILE = RESULTS_DIR / "Switch State" / "Switch_state.csv"
 ```
-
-This means:
-
-* output files are written into the same folder as `distance-protection-dataset-generator.py`;
-* `Switch_state.csv` is expected one directory above the script folder, under `Results/Switch State/`;
-* if `distance-protection-dataset-generator.py` is moved, the location of `Switch_state.csv` changes accordingly.
-
 ## Switch-state input file
 
 The script expects the switch-state configuration file at:
@@ -162,20 +155,6 @@ ConfigID;switch_<cubicle_cimRdfId_1>;switch_<cubicle_cimRdfId_2>;switch_<cubicle
 547e4bb8-9306-5355-89e5-a58215e9ed82;1;1;1
 c004d72b-8523-54db-aa4c-ab5f045b59d4;1;0;1
 ```
-
-Rules:
-
-* `ConfigID` identifies the switch-state configuration.
-* Each switch-state column must start with `switch_`.
-* The part after `switch_` must match the corresponding PowerFactory cubicle `cimRdfId`.
-* Leading underscores in the PowerFactory `cimRdfId` are ignored by the script.
-* `1` means the switch is closed.
-* `0` means the switch is open.
-* Blank or non-numeric switch values are interpreted as `1`, meaning closed.
-* Any column that does not start with `switch_` is ignored for switch-state application.
-
-> Note: the script reads the `.csv` file with automatic delimiter detection. However, the provided `Switch_state.csv` uses semicolons, so the recommended format is semicolon-separated. 
-If `MAX_SWITCH_STATE_CONFIG_COUNT` is set in `Config`, only the first selected number of switch-state rows are processed.
 
 ## Scenario-generation settings
 
