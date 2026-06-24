@@ -1,0 +1,7 @@
+/Results/*.parquet
+/Results/*.csv
+/Results/*.xlsx
+/Results/*.json
+/logs/
+__pycache__/
+.DS_Store
