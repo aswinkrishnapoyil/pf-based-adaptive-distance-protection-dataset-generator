@@ -24,9 +24,9 @@ import pyarrow.parquet as pq
 # -------------------------------------------- Configuration & Paths ---------------------------------------------------
 # ======================================================================================================================
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-OUTPUT_DIR = SCRIPT_DIR
+PROJECT_ROOT = SCRIPT_DIR
 RESULTS_DIR = PROJECT_ROOT / "Results"
+OUTPUT_DIR = RESULTS_DIR
 SWITCH_STATE_DIR = RESULTS_DIR / "Switch State"
 SWITCH_STATE_FILE = SWITCH_STATE_DIR / "Switch_state.csv"
 LOGS_DIR = SCRIPT_DIR / "logs"
@@ -1423,15 +1423,6 @@ def get_case_feature_dict_for_corridor(proj, app, grid, corr, net, all_corridors
     z2s = select_zone2_downstream_branch_group(corr, all_corridors)
     z2b = z2s.get("selected_branch", build_empty_branch_summary(corr.get("subsequent_busbar")))
     zmath = calculate_distance_zone_reaches_for_corridor(corr, z2b, psum, all_corridors)
-
-    # --- Precision-formatted log output ---
-    logger.info(
-        f"Processing {c_idx:03d}: {relay_name} -> {relay_id} -> {corridor_id} -> {sub_name} "
-        f"-> Z1: {zmath.get('target_zone1_r_reach_ohm', 0):.2f}|{zmath.get('target_zone1_x_reach_ohm', 0):.2f}, "
-        f"Z2: {zmath.get('target_zone2_r_reach_ohm', 0):.2f}|{zmath.get('target_zone2_x_reach_ohm', 0):.2f}, "
-        f"Z3: {zmath.get('target_zone3_r_reach_ohm', 0):.2f}|{zmath.get('target_zone3_x_reach_ohm', 0):.2f}"
-    )
-
     rb, sb, fl, rc, lines = corr.get("relay_busbar"), corr.get("subsequent_busbar"), corr.get(
         "first_line_section"), corr.get("relay_cubicle"), corr.get("line_sections", [])
 
@@ -1557,6 +1548,16 @@ def get_case_feature_dict_for_corridor(proj, app, grid, corr, net, all_corridors
         "target_zone3_r_reach_ohm": zmath.get("zone3_r_reach_ohm", 0.0),
         "target_zone3_x_reach_ohm": zmath.get("zone3_x_reach_ohm", 0.0)
     }
+
+    logger.info(
+        f"Processed {c_idx:03d} - {relay_name}: {relay_id} -> {corridor_id} -> {sub_name} "
+        f"-> Z1: {dr.get('target_zone1_r_reach_ohm', 0.0):.2f}|"
+        f"{dr.get('target_zone1_x_reach_ohm', 0.0):.2f}, "
+        f"Z2: {dr.get('target_zone2_r_reach_ohm', 0.0):.2f}|"
+        f"{dr.get('target_zone2_x_reach_ohm', 0.0):.2f}, "
+        f"Z3: {dr.get('target_zone3_r_reach_ohm', 0.0):.2f}|"
+        f"{dr.get('target_zone3_x_reach_ohm', 0.0):.2f}"
+    )
 
     return {col: dr.get(col, None) for col in l_case_feature_columns}
 
@@ -2241,6 +2242,9 @@ def stream_export_and_audit(generator: Generator) -> None:
 # ------------------------------------------------ Pipeline Execution --------------------------------------------------
 # ======================================================================================================================
 def main():
+    print(f"DEBUG: SCRIPT_DIR: {SCRIPT_DIR}")
+    print(f"DEBUG: SWITCH_STATE_FILE: {SWITCH_STATE_FILE}")
+    print(f"DEBUG: File exists: {os.path.exists(SWITCH_STATE_FILE)}")
     logger.info("=" * 120)
     logger.info(f"------------------- {Config.DATASET_VERSION} - Native Graph Array Generator ------------------------")
     logger.info("=" * 120)
