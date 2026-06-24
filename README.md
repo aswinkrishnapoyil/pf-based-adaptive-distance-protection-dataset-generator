@@ -99,8 +99,6 @@ class Config:
     GRID_NAME = "Grid_110kV.ElmNet"
 ```
 
-Update these values if the supervisor's system uses a different PowerFactory installation path, project path, or grid name.
-
 |Setting|Meaning|
 |-|-|
 |`PF_PYTHON_PATH`|Folder containing the PowerFactory Python API module|
