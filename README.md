@@ -135,10 +135,12 @@ Important path logic inside the script:
 
 ```python
 SCRIPT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = SCRIPT_DIR.parent
-OUTPUT_DIR = SCRIPT_DIR
+PROJECT_ROOT = SCRIPT_DIR
 RESULTS_DIR = PROJECT_ROOT / "Results"
-SWITCH_STATE_FILE = RESULTS_DIR / "Switch State" / "Switch_state.csv"
+OUTPUT_DIR = RESULTS_DIR
+SWITCH_STATE_DIR = RESULTS_DIR / "Switch State"
+SWITCH_STATE_FILE = SWITCH_STATE_DIR / "Switch_state.csv"
+LOGS_DIR = SCRIPT_DIR / "logs" 
 ```
 ## Switch-state input file
 
