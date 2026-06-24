@@ -104,9 +104,6 @@ class Config:
 |`PF_PYTHON_PATH`|Folder containing the PowerFactory Python API module|
 |`PROJECT_NAME`|Exact PowerFactory project path to activate|
 |`GRID_NAME`|Exact grid object name inside the active project|
-|`DATASET_VERSION`|Version label written to metadata|
-|`REACH_GF`|Zone reach grading factor for Zone 1 and 2, currently `0.85`|
-|`ZONE3_REACH_FACTOR`|Zone 3 downstream branch multiplier, currently `1.20`|
 
 ## Expected folder structure
 
