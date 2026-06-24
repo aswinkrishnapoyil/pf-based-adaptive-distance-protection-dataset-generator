@@ -2,7 +2,7 @@
 
 This repository contains a PowerFactory-based dataset generation pipeline for distance protection parameter prediction.
 
-The main script, `v2.0.py`, connects to DIgSILENT PowerFactory, activates the configured 110 kV grid model, applies switch-state scenarios, optionally randomizes line lengths and distributed-generation capacities, calculates distance protection reach values, and exports both graph-array and flat audit datasets.
+The main script, `distance-protection-dataset-generator.py`, connects to DIgSILENT PowerFactory, activates the configured 110 kV grid model, applies switch-state scenarios, optionally randomizes line lengths and distributed-generation capacities, calculates distance protection reach values, and exports both graph-array and flat audit datasets.
 
 The generated dataset is intended for machine-learning workflows where grid topology, switched admittance matrices, relay corridor features, distributed-generation context, and Zone 1/2/3 relay reach targets are required.
 
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 
 ## PowerFactory configuration
 
-Before running the script, check the `Config` class in `v2.0.py`.
+Before running the script, check the `Config` class in `distance-protection-dataset-generator.py`.
 
 ```python
 class Config:
@@ -110,27 +110,25 @@ Update these values if the supervisor's system uses a different PowerFactory ins
 |`REACH_GF`|Zone reach grading factor for Zone 1 and 2, currently `0.85`|
 |`ZONE3_REACH_FACTOR`|Zone 3 downstream branch multiplier, currently `1.20`|
 
-> Note: the script file is named `v2.0.py`, but the internal `DATASET_VERSION` value should also be checked before a final run. If the exported metadata should say `v2.0`, update `DATASET_VERSION` accordingly.
-
 ## Expected folder structure
 
-The script defines paths relative to the location of `v2.0.py`.
+The script defines paths relative to the location of `distance-protection-dataset-generator.py`.
 
 ```text
-distance-protection-parameter-prediction/
-│
-├── Results/
-│   └── Switch State/
-│       └── Switch_state.csv
-│
-├── dataset_generator/
-│   ├── v2.0.py
-│   ├── requirements.txt
-│   ├── README.md
-│   └── logs/
-│       └── pipeline.log
-│
-└── .gitignore
+pf-based-adaptive-distance-protection-dataset-generator/
+├── distance-protection-dataset-generator.py
+├── README.md
+├── requirements.txt
+├── .gitignore
+├── logs/
+│   └── pipeline.log
+└── Results/
+    ├── Switch State/
+    │   └── Switch_state.csv
+    ├── case_feature_matrix_graph_array_topology.parquet
+    ├── case_feature_matrix_randomized_grid_scenarios.csv
+    ├── dataset_metadata.json
+    └── dataset_statistics.json 
 ```
 
 Important path logic inside the script:
@@ -145,9 +143,9 @@ SWITCH_STATE_FILE = RESULTS_DIR / "Switch State" / "Switch_state.csv"
 
 This means:
 
-* output files are written into the same folder as `v2.0.py`;
+* output files are written into the same folder as `distance-protection-dataset-generator.py`;
 * `Switch_state.csv` is expected one directory above the script folder, under `Results/Switch State/`;
-* if `v2.0.py` is moved, the location of `Switch_state.csv` changes accordingly.
+* if `distance-protection-dataset-generator.py` is moved, the location of `Switch_state.csv` changes accordingly.
 
 ## Switch-state input file
 
