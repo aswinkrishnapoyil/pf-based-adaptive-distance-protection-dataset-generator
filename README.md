@@ -19,7 +19,7 @@ The pipeline performs the following operations:
    * Selects the configured grid object.
 2. **Loads switch-state scenarios**
 
-   * Reads `Switch\\\_state.csv` from the expected `Results/Switch State/` folder.
+   * Reads `Switch\_state.csv` from the expected `Results/Switch State/` folder.
    * Applies each switch-state configuration to PowerFactory cubicles.
    * Treats switch value `1` as closed and `0` as open.
 3. **Updates topology according to open switches**
@@ -84,7 +84,7 @@ Windows PowerShell:
 
 ```powershell
 python -m venv .venv
-.\\\\.venv\\\\Scripts\\\\Activate.ps1
+.\\.venv\\Scripts\\Activate.ps1
 ```
 
 Install all requirements with pip
@@ -101,23 +101,23 @@ Before running the script, check the `Config` class in `v2.0.py`.
 
 ```python
 class Config:
-    PF\\\_PYTHON\\\_PATH = r"C:\\\\Program Files\\\\DIgSILENT\\\\PowerFactory 2023 SP3\\\\Python\\\\3.9"
-    PROJECT\\\_NAME = r"\\\\ic84yhos\\\\Venus\\\\VeN2uS\\\_ExampleGrid\\\_v1.4\\\_FRT\\\_KP"
-    GRID\\\_NAME = "Grid\\\_110kV.ElmNet"
+    PF\_PYTHON\_PATH = r"C:\\Program Files\\DIgSILENT\\PowerFactory 2023 SP3\\Python\\3.9"
+    PROJECT\_NAME = r"\\ic84yhos\\Venus\\VeN2uS\_ExampleGrid\_v1.4\_FRT\_KP"
+    GRID\_NAME = "Grid\_110kV.ElmNet"
 ```
 
 Update these values if the supervisor's system uses a different PowerFactory installation path, project path, or grid name.
 
 |Setting|Meaning|
 |-|-|
-|`PF\\\_PYTHON\\\_PATH`|Folder containing the PowerFactory Python API module|
-|`PROJECT\\\_NAME`|Exact PowerFactory project path to activate|
-|`GRID\\\_NAME`|Exact grid object name inside the active project|
-|`DATASET\\\_VERSION`|Version label written to metadata|
-|`REACH\\\_GF`|Zone reach grading factor for Zone 1 and 2, currently `0.85`|
-|`ZONE3\\\_REACH\\\_FACTOR`|Zone 3 downstream branch multiplier, currently `1.20`|
+|`PF\_PYTHON\_PATH`|Folder containing the PowerFactory Python API module|
+|`PROJECT\_NAME`|Exact PowerFactory project path to activate|
+|`GRID\_NAME`|Exact grid object name inside the active project|
+|`DATASET\_VERSION`|Version label written to metadata|
+|`REACH\_GF`|Zone reach grading factor for Zone 1 and 2, currently `0.85`|
+|`ZONE3\_REACH\_FACTOR`|Zone 3 downstream branch multiplier, currently `1.20`|
 
-> Note: the script file is named `v2.0.py`, but the internal `DATASET\\\_VERSION` value should also be checked before a final run. If the exported metadata should say `v2.0`, update `DATASET\\\_VERSION` accordingly.
+> Note: the script file is named `v2.0.py`, but the internal `DATASET\_VERSION` value should also be checked before a final run. If the exported metadata should say `v2.0`, update `DATASET\_VERSION` accordingly.
 
 \---
 
@@ -130,9 +130,9 @@ distance-protection-parameter-prediction/
 │
 ├── Results/
 │   └── Switch State/
-│       └── Switch\\\_state.csv
+│       └── Switch\_state.csv
 │
-├── dataset\\\_generator/
+├── dataset\_generator/
 │   ├── v2.0.py
 │   ├── requirements.txt
 │   ├── README.md
@@ -145,18 +145,18 @@ distance-protection-parameter-prediction/
 Important path logic inside the script:
 
 ```python
-SCRIPT\\\_DIR = Path(\\\_\\\_file\\\_\\\_).resolve().parent
-PROJECT\\\_ROOT = SCRIPT\\\_DIR.parent
-OUTPUT\\\_DIR = SCRIPT\\\_DIR
-RESULTS\\\_DIR = PROJECT\\\_ROOT / "Results"
-SWITCH\\\_STATE\\\_FILE = RESULTS\\\_DIR / "Switch State" / "Switch\\\_state.csv"
+SCRIPT\_DIR = Path(\_\_file\_\_).resolve().parent
+PROJECT\_ROOT = SCRIPT\_DIR.parent
+OUTPUT\_DIR = SCRIPT\_DIR
+RESULTS\_DIR = PROJECT\_ROOT / "Results"
+SWITCH\_STATE\_FILE = RESULTS\_DIR / "Switch State" / "Switch\_state.csv"
 ```
 
 This means:
 
 * output files are written into the same folder as `v2.0.py`;
-* `Switch\\\_state.csv` is expected one directory above the script folder, under `Results/Switch State/`;
-* if `v2.0.py` is moved, the location of `Switch\\\_state.csv` changes accordingly.
+* `Switch\_state.csv` is expected one directory above the script folder, under `Results/Switch State/`;
+* if `v2.0.py` is moved, the location of `Switch\_state.csv` changes accordingly.
 
 \---
 
@@ -165,13 +165,13 @@ This means:
 The script expects the switch-state configuration file at:
 
 ```text
-Results/Switch State/Switch\\\_state.csv
+Results/Switch State/Switch\_state.csv
 ```
 
 Expected format:
 
 ```csv
-ConfigID;switch\\\_<cubicle\\\_cimRdfId\\\_1>;switch\\\_<cubicle\\\_cimRdfId\\\_2>;switch\\\_<cubicle\\\_cimRdfId\\\_3>
+ConfigID;switch\_<cubicle\_cimRdfId\_1>;switch\_<cubicle\_cimRdfId\_2>;switch\_<cubicle\_cimRdfId\_3>
 547e4bb8-9306-5355-89e5-a58215e9ed82;1;1;1
 c004d72b-8523-54db-aa4c-ab5f045b59d4;1;0;1
 ```
@@ -179,16 +179,16 @@ c004d72b-8523-54db-aa4c-ab5f045b59d4;1;0;1
 Rules:
 
 * `ConfigID` identifies the switch-state configuration.
-* Each switch-state column must start with `switch\\\_`.
-* The part after `switch\\\_` must match the corresponding PowerFactory cubicle `cimRdfId`.
+* Each switch-state column must start with `switch\_`.
+* The part after `switch\_` must match the corresponding PowerFactory cubicle `cimRdfId`.
 * Leading underscores in the PowerFactory `cimRdfId` are ignored by the script.
 * `1` means the switch is closed.
 * `0` means the switch is open.
 * Blank or non-numeric switch values are interpreted as `1`, meaning closed.
-* Any column that does not start with `switch\\\_` is ignored for switch-state application.
+* Any column that does not start with `switch\_` is ignored for switch-state application.
 
-> Note: the script reads the `.csv` file with automatic delimiter detection. However, the provided `Switch\\\_state.csv` uses semicolons, so the recommended format is semicolon-separated. 
-If `MAX\\\_SWITCH\\\_STATE\\\_CONFIG\\\_COUNT` is set in `Config`, only the first selected number of switch-state rows are processed..
+> Note: the script reads the `.csv` file with automatic delimiter detection. However, the provided `Switch\_state.csv` uses semicolons, so the recommended format is semicolon-separated. 
+If `MAX\_SWITCH\_STATE\_CONFIG\_COUNT` is set in `Config`, only the first selected number of switch-state rows are processed..
 
 \---
 
@@ -197,20 +197,20 @@ If `MAX\\\_SWITCH\\\_STATE\\\_CONFIG\\\_COUNT` is set in `Config`, only the firs
 The most important settings are in the `Config` class.
 
 ```python
-ENABLE\\\_LINE\\\_RANDOMIZATION = False
-RANDOMIZED\\\_SCENARIO\\\_COUNT = 0
-RANDOM\\\_SEED\\\_BASE: Optional\\\[int] = None
-LINE\\\_LENGTH\\\_SCALE\\\_MIN = 0.8
-LINE\\\_LENGTH\\\_SCALE\\\_MAX = 1.2
-INCLUDE\\\_ORIGINAL\\\_BASE\\\_CASE = True
+ENABLE\_LINE\_RANDOMIZATION = False
+RANDOMIZED\_SCENARIO\_COUNT = 0
+RANDOM\_SEED\_BASE: Optional\[int] = None
+LINE\_LENGTH\_SCALE\_MIN = 0.8
+LINE\_LENGTH\_SCALE\_MAX = 1.2
+INCLUDE\_ORIGINAL\_BASE\_CASE = True
 
-ENABLE\\\_DG\\\_CAPACITY\\\_RANDOMIZATION = False
-DG\\\_CAPACITY\\\_SCALE\\\_MIN = 0.8
-DG\\\_CAPACITY\\\_SCALE\\\_MAX = 1.2
-DG\\\_CAPACITY\\\_RANDOM\\\_SEED\\\_OFFSET = 100000
+ENABLE\_DG\_CAPACITY\_RANDOMIZATION = False
+DG\_CAPACITY\_SCALE\_MIN = 0.8
+DG\_CAPACITY\_SCALE\_MAX = 1.2
+DG\_CAPACITY\_RANDOM\_SEED\_OFFSET = 100000
 
-ENABLE\\\_SWITCH\\\_STATE\\\_SCENARIOS = True
-MAX\\\_SWITCH\\\_STATE\\\_CONFIG\\\_COUNT = 1
+ENABLE\_SWITCH\_STATE\_SCENARIOS = True
+MAX\_SWITCH\_STATE\_CONFIG\_COUNT = 1
 ```
 
 ### Current default behavior
@@ -231,21 +231,21 @@ For a large dataset generation run, update the settings deliberately.
 Example:
 
 ```python
-ENABLE\\\_LINE\\\_RANDOMIZATION = True
-RANDOMIZED\\\_SCENARIO\\\_COUNT = 100
-RANDOM\\\_SEED\\\_BASE: Optional\\\[int] = None
-LINE\\\_LENGTH\\\_SCALE\\\_MIN = 0.8
-LINE\\\_LENGTH\\\_SCALE\\\_MAX = 1.2
-INCLUDE\\\_ORIGINAL\\\_BASE\\\_CASE = True
+ENABLE\_LINE\_RANDOMIZATION = True
+RANDOMIZED\_SCENARIO\_COUNT = 100
+RANDOM\_SEED\_BASE: Optional\[int] = None
+LINE\_LENGTH\_SCALE\_MIN = 0.8
+LINE\_LENGTH\_SCALE\_MAX = 1.2
+INCLUDE\_ORIGINAL\_BASE\_CASE = True
 
-ENABLE\\\_DG\\\_CAPACITY\\\_RANDOMIZATION = True
-DG\\\_CAPACITY\\\_SCALE\\\_MIN = 0.8
-DG\\\_CAPACITY\\\_SCALE\\\_MAX = 1.2
-DG\\\_CAPACITY\\\_RANDOM\\\_SEED\\\_OFFSET = 100000
+ENABLE\_DG\_CAPACITY\_RANDOMIZATION = True
+DG\_CAPACITY\_SCALE\_MIN = 0.8
+DG\_CAPACITY\_SCALE\_MAX = 1.2
+DG\_CAPACITY\_RANDOM\_SEED\_OFFSET = 100000
 
-ENABLE\\\_SWITCH\\\_STATE\\\_SCENARIOS = True
-MAX\\\_SWITCH\\\_STATE\\\_CONFIG\\\_COUNT = None
+ENABLE\_SWITCH\_STATE\_SCENARIOS = True
+MAX\_SWITCH\_STATE\_CONFIG\_COUNT = None
 ```
 
-Use a fixed `RANDOM\\\_SEED\\\_BASE` for reproducible datasets. Leave it as `None` only when a new seed should be generated automatically.
+Use a fixed `RANDOM\_SEED\_BASE` for reproducible datasets. Leave it as `None` only when a new seed should be generated automatically.
 
