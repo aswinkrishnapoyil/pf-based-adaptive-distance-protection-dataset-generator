@@ -87,17 +87,16 @@ python main_script.py
 ## Configuration
 
 ### PowerFactory Settings
-
-PowerFactory-specific settings are defined in `pf_adaptive_distance_dataset/core/config.py`. Important configuration values include:
+PowerFactory-specific settings are defined in `pf_adaptive_distance_dataset/core/config.py`. **To run this pipeline locally, you must update these values to match your specific PowerFactory installation and project environment.**
 
 ```python
-PF_PYTHON_PATH = r"C:\Program Files\DIgSILENT\PowerFactory 2023 SP3\Python\3.9"
-PROJECT_NAME = r"\ic84yhos\Venus\VeN2uS_ExampleGrid_v1.4_FRT_KP"
-GRID_NAME = "Grid_110kV.ElmNet"
+# UPDATE THESE TO MATCH YOUR LOCAL SETUP:
+PF_PYTHON_PATH = r"C:\Program Files\DIgSILENT\PowerFactory 2023 SP3\Python\3.9" # Path to your PF Python API folder
+PROJECT_NAME = r"\Your\Project\Path\Here" # The exact path to your project inside PowerFactory
+GRID_NAME = "Grid_110kV.ElmNet" # The specific grid network you want to activate
 
 MASTER_STUDY_CASE_NAME = "Study Case"
 MASTER_OPERATION_SCENARIO_NAME = "OS_Master"
-
 ```
 
 The pipeline expects a master study case and master operation scenario to exist. For each switch-state configuration, the pipeline creates a slave study case/scenario pair, processes all scenarios, and then safely deletes the slaves.
