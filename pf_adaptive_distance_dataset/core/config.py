@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
+SCRIPT_DIR = Path(__file__).resolve().parents[2]
 PROJECT_ROOT = SCRIPT_DIR
 
 RESULTS_DIR = PROJECT_ROOT / "Results"
