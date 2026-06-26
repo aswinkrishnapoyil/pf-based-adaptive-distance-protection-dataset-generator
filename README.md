@@ -1,16 +1,6 @@
 ﻿# PF-Based Adaptive Distance Protection Dataset Generator
 
-The goal of this project is to generate structured datasets for predicting or analyzing adaptive distance-protection parameters in distribution or sub-transmission grids with distributed generation (DG).
-
-**The generated dataset includes:**
-* Protected corridor topology features
-* Zone 1, Zone 2, and Zone 3 distance reach values
-* Downstream branch and parallel-corridor information
-* Distributed generation location and capacity features
-* Short-circuit based DG infeed correction features
-* Switch-state scenario metadata
-* Randomized line-length and DG-capacity scenario metadata
-* Graph-array representations of the network scenario
+The goal of this project is to generate structured datasets for predicting or analyzing adaptive distance-protection parameters in sub-transmission grids with distributed generation (DG).
 
 ## Repository Structure
 
@@ -63,8 +53,6 @@ pip install -r requirements.txt
 
 *Required packages:* `pandas`, `openpyxl`, `pyarrow`
 
-> **Note:** The `powerfactory` Python module is not installed via pip. It is provided by your local PowerFactory installation.
-
 ### Main Entry Point
 
 Run the pipeline from the repository root:
@@ -109,7 +97,7 @@ You can adjust these to run quick tests or to generate massive datasets:
 ```python
 # --- Switch State Controls ---
 ENABLE_SWITCH_STATE_SCENARIOS = True
-MAX_SWITCH_STATE_CONFIG_COUNT = 2  # Set to a low number (e.g., 2) for testing, or None to process all rows in your CSV
+MAX_SWITCH_STATE_CONFIG_COUNT = 2  # Set to a low number (e.g., 2) for testing, or None to process all rows in CSV
 
 # --- Base Case & Randomization Volume ---
 INCLUDE_ORIGINAL_BASE_CASE = True  # Always include the un-modified grid state
@@ -138,15 +126,6 @@ Switch-state configurations are read from:
 ```text
 Results/Switch State/Switch_state.csv
 ```
-
-Switch-state columns must use the prefix `switch_` (e.g., `ConfigID,switch_<rdf_id_1>,switch_<rdf_id_2>`).
-
-Each switch value is normalized as:
-
-* `1` = closed
-* `0` = open
-
-*If switch-state scenarios are disabled, the pipeline defaults to the live grid state.*
 
 ### Output Files
 
