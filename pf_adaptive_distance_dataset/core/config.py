@@ -23,37 +23,45 @@ LOGS_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class Config:
+    # UPDATE THESE TO MATCH YOUR LOCAL SETUP:
     PF_PYTHON_PATH = r"C:\Program Files\DIgSILENT\PowerFactory 2023 SP3\Python\3.9"
     PROJECT_NAME = r"\ic84yhos\Venus\VeN2uS_ExampleGrid_v1.4_FRT_KP"
     GRID_NAME = "Grid_110kV.ElmNet"
 
-    DATASET_VERSION = "v2.1"
-    DATASET_EXPORT_TYPE = "streaming_graph_array_with_metadata"
-
-    REACH_GF = 0.85
-    ZONE3_REACH_FACTOR = 1.20
-    ZERO_TOLERANCE = 1e-12
-
-    ENABLE_LINE_RANDOMIZATION = True
-    RANDOMIZED_SCENARIO_COUNT = 1
-    RANDOM_SEED_BASE: Optional[int] = None
-    LINE_LENGTH_SCALE_MIN = 0.8
-    LINE_LENGTH_SCALE_MAX = 1.2
-    INCLUDE_ORIGINAL_BASE_CASE = True
-
-    ENABLE_DG_CAPACITY_RANDOMIZATION = True
-    DG_CAPACITY_SCALE_MIN = 0.8
-    DG_CAPACITY_SCALE_MAX = 1.2
-    DG_CAPACITY_RANDOM_SEED_OFFSET = 100000
-
-    ENABLE_SWITCH_STATE_SCENARIOS = True
-    MAX_SWITCH_STATE_CONFIG_COUNT = 2
-
-    MASTER_STUDY_CASE_NAME = "Study Case"
+    MASTER_STUDY_CASE_NAME = "SC_Master"
     MASTER_OPERATION_SCENARIO_NAME = "OS_Master"
 
     SLAVE_STUDY_CASE_PREFIX = "SC_Slave"
     SLAVE_OPERATION_SCENARIO_PREFIX = "OS_Slave"
+
+    DATASET_VERSION = "v2.2"
+    DATASET_EXPORT_TYPE = "streaming_graph_array_with_metadata"
+
+    # --- Grading Factor for Zone Reach ---
+    REACH_GF = 0.85
+    ZONE3_REACH_FACTOR = 1.20
+    ZERO_TOLERANCE = 1e-12
+
+    # --- Switch State Controls ---
+    ENABLE_SWITCH_STATE_SCENARIOS = True
+    MAX_SWITCH_STATE_CONFIG_COUNT = 2
+
+    # --- Base Case & Randomization Volume ---
+    INCLUDE_ORIGINAL_BASE_CASE = True
+    RANDOMIZED_SCENARIO_COUNT = 1
+
+    # --- Line Length Randomization ---
+    ENABLE_LINE_RANDOMIZATION = True
+    LINE_LENGTH_SCALE_MIN = 0.8
+    LINE_LENGTH_SCALE_MAX = 1.2
+
+    # --- Distributed Generation (DG) Randomization ---
+    ENABLE_DG_CAPACITY_RANDOMIZATION = True
+    DG_CAPACITY_SCALE_MIN = 0.8
+    DG_CAPACITY_SCALE_MAX = 1.2
+
+    RANDOM_SEED_BASE: Optional[int] = None
+    DG_CAPACITY_RANDOM_SEED_OFFSET = 100000
 
     @classmethod
     def get_random_seed_base(cls) -> int:
