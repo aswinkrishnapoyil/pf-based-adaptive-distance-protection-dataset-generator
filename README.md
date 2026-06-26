@@ -95,31 +95,35 @@ PF_PYTHON_PATH = r"C:\Program Files\DIgSILENT\PowerFactory 2023 SP3\Python\3.9" 
 PROJECT_NAME = r"\Your\Project\Path\Here" # The exact path to your project inside PowerFactory
 GRID_NAME = "Grid_110kV.ElmNet" # The specific grid network you want to activate
 
-MASTER_STUDY_CASE_NAME = "Study Case"
-MASTER_OPERATION_SCENARIO_NAME = "OS_Master"
+MASTER_STUDY_CASE_NAME = "Study Case" # Name of your Study Case
+MASTER_OPERATION_SCENARIO_NAME = "OS_Master" # Name of your Operation Scenario
 ```
 
-The pipeline expects a master study case and master operation scenario to exist. For each switch-state configuration, the pipeline creates a slave study case/scenario pair, processes all scenarios, and then safely deletes the slaves.
+For each switch-state configuration, the pipeline creates a slave study case/scenario pair, processes all scenarios, and then safely deletes the slaves.
 
 ### Scenario Configuration
+Scenario controls dictate how many dataset rows are generated and how much the grid topology varies. These are also located in `config.py`.
 
-Scenario controls are also located in `config.py`:
+You can adjust these to run quick tests or to generate massive datasets:
 
 ```python
+# --- Switch State Controls ---
 ENABLE_SWITCH_STATE_SCENARIOS = True
-MAX_SWITCH_STATE_CONFIG_COUNT = 2
+MAX_SWITCH_STATE_CONFIG_COUNT = 2  # Set to a low number (e.g., 2) for testing, or None to process all rows in your CSV
 
-INCLUDE_ORIGINAL_BASE_CASE = True
-RANDOMIZED_SCENARIO_COUNT = 1
+# --- Base Case & Randomization Volume ---
+INCLUDE_ORIGINAL_BASE_CASE = True  # Always include the un-modified grid state
+RANDOMIZED_SCENARIO_COUNT = 1      # Number of randomized variations to generate PER switch state
 
+# --- Line Length Randomization ---
 ENABLE_LINE_RANDOMIZATION = True
-LINE_LENGTH_SCALE_MIN = 0.8
-LINE_LENGTH_SCALE_MAX = 1.2
+LINE_LENGTH_SCALE_MIN = 0.8        # Scales line length down to 80%
+LINE_LENGTH_SCALE_MAX = 1.2        # Scales line length up to 120%
 
+# --- Distributed Generation (DG) Randomization ---
 ENABLE_DG_CAPACITY_RANDOMIZATION = True
-DG_CAPACITY_SCALE_MIN = 0.8
-DG_CAPACITY_SCALE_MAX = 1.2
-
+DG_CAPACITY_SCALE_MIN = 0.8        # Scales DG capacity down to 80%
+DG_CAPACITY_SCALE_MAX = 1.2        # Scales DG capacity up to 120%
 ```
 
 *Example runtime with the above config: 
