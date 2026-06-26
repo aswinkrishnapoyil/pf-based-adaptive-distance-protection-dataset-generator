@@ -44,10 +44,10 @@ The pipeline performs the following operations:
    * Builds directed edge arrays.
    * Builds physical edge arrays.
    * Stamps switched admittance matrix data.
-   * Stores graph-level arrays in a `.paraquet` dataset.
+   * Stores graph-level arrays in a `.parquet` dataset.
 7. **Exports audit and metadata files**
 
-   * Streams graph rows directly to`.paraquet`.
+   * Streams graph rows directly to`.parquet` part files.
    * Streams flat corridor rows to `.csv`.
    * Creates an `.xlsx` audit file.
    * Saves metadata, statistics, and randomization logs.
@@ -120,8 +120,14 @@ pf-based-adaptive-distance-protection-dataset-generator/
 └── Results/
     ├── Switch State/
     │   └── Switch_state.csv
+    ├── case_features_graph_array_part_000000.parquet
+    ├── case_features_graph_array_part_000005.parquet
+    ├── case_features_graph_array_part_000010.parquet
     ├── case_feature_matrix_graph_array_topology.parquet
     ├── case_feature_matrix_randomized_grid_scenarios.csv
+    ├── case_feature_matrix_randomized_grid_scenarios.xlsx
+    ├── line_length_randomization_log.csv
+    ├── dg_capacity_randomization_log.csv
     ├── dataset_metadata.json
     └── dataset_statistics.json 
 ```

@@ -1,0 +1,654 @@
+# case_features.py
+from __future__ import annotations
+
+import logging
+
+from config import Config
+
+from dataset_schema import l_case_feature_columns
+
+from pf_utils import (
+    get_boolean_value,
+    get_safe_name,
+    get_unique_objects,
+)
+
+from topology import (
+    get_terminal_is_junction_node,
+    get_relay_id_from_terminal_and_line,
+    get_branch_line_names,
+)
+
+from dg_utils import (
+    get_unique_distributed_generators_from_terminals,
+    summarize_dg_by_corridor_location,
+)
+
+from network_topology import (
+    extract_network_once,
+    detect_protected_corridors_once,
+    build_empty_branch_summary,
+    filter_valid_downstream_branches_excluding_relay_return,
+    summarize_next_node_downstream_context,
+    summarize_parallel_protected_corridors,
+    get_parallel_protected_corridor_line_names,
+    select_zone2_downstream_branch_group,
+)
+
+from zone_reach import (
+    select_zone3_longest_valid_downstream_branch,
+    count_forward_parallel_branch_groups_for_corridor,
+    calculate_distance_zone_reaches_for_corridor,
+)
+
+from infeed import (
+    split_protected_corridor_turbines_by_zone_reach,
+    get_relay_side_and_cubicle,
+    read_relay_reference_ikss,
+    calculate_zone_infeed_summary_for_turbines,
+)
+
+
+logger = logging.getLogger(__name__)
+
+
+def get_case_feature_dict_for_corridor(
+    o_project,
+    o_app,
+    o_grid,
+    d_corridor,
+    _d_network,
+    l_all_corridors,
+    i_case_index,
+    cached_all_grid_dg=None,
+):
+    """
+    Builds one complete flat feature row for one protected corridor direction.
+    The output dictionary keys must stay aligned with l_case_feature_columns.
+    """
+
+    l_cached_all_grid_dg = cached_all_grid_dg
+
+    # ------------------------------------------------------------------
+    # Basic corridor objects and identifiers
+    # ------------------------------------------------------------------
+    o_relay_busbar = d_corridor.get("relay_busbar")
+    o_subsequent_busbar = d_corridor.get("subsequent_busbar")
+    o_first_line_section = d_corridor.get("first_line_section")
+    o_relay_cubicle = d_corridor.get("relay_cubicle")
+    l_protected_corridor_lines = d_corridor.get("line_sections", [])
+
+    s_relay_id = get_relay_id_from_terminal_and_line(
+        o_relay_busbar,
+        o_first_line_section,
+    )
+
+    s_relay_node_name = get_safe_name(o_relay_busbar)
+    s_subsequent_node_name = get_safe_name(o_subsequent_busbar)
+
+    s_protected_corridor_id = d_corridor.get(
+        "protected_corridor_id",
+        "Unknown_Corridor",
+    )
+
+    # ------------------------------------------------------------------
+    # Parallel corridor, downstream branch, and zone-reach summaries
+    # ------------------------------------------------------------------
+    d_parallel_summary = summarize_parallel_protected_corridors(
+        d_corridor,
+        l_all_corridors,
+    )
+
+    l_valid_downstream_branches = (
+        filter_valid_downstream_branches_excluding_relay_return(
+            d_corridor,
+            l_all_corridors,
+        )
+    )
+
+    d_zone2_selection = select_zone2_downstream_branch_group(
+        d_corridor,
+        l_all_corridors,
+    )
+
+    d_zone2_branch = d_zone2_selection.get(
+        "selected_branch",
+        build_empty_branch_summary(o_subsequent_busbar),
+    )
+
+    d_zone_reaches = calculate_distance_zone_reaches_for_corridor(
+        d_corridor,
+        d_zone2_branch,
+        d_parallel_summary,
+        l_all_corridors,
+    )
+
+    d_next_node_summary = summarize_next_node_downstream_context(
+        l_valid_downstream_branches,
+    )
+
+    _d_zone3_branch = (
+        select_zone3_longest_valid_downstream_branch(
+            d_corridor,
+            l_all_corridors,
+        )
+        or build_empty_branch_summary(o_subsequent_busbar)
+    )
+
+    i_parallel_group_count_forward, _i_max_parallel_branch_count = (
+        count_forward_parallel_branch_groups_for_corridor(
+            d_corridor,
+            l_all_corridors,
+        )
+    )
+
+    # ------------------------------------------------------------------
+    # Distributed generation summaries
+    # ------------------------------------------------------------------
+    d_dg_context = summarize_dg_by_corridor_location(
+        d_corridor,
+        d_zone2_branch,
+    )
+
+    (
+        l_zone1_turbines,
+        l_zone2_protected_corridor_turbines,
+    ) = split_protected_corridor_turbines_by_zone_reach(
+        d_corridor,
+        d_dg_context["protected_corridor"].get("objects", []),
+        Config.REACH_GF,
+    )
+
+    l_zone2_turbines = get_unique_objects(
+        list(l_zone1_turbines)
+        + list(l_zone2_protected_corridor_turbines)
+        + d_dg_context["subsequent_busbar"].get("objects", [])
+        + d_dg_context["downstream_branch"].get("objects", [])
+    )
+
+    # ------------------------------------------------------------------
+    # Relay-side Ikss reference
+    # ------------------------------------------------------------------
+    (
+        o_relay_side_cubicle,
+        _s_relay_side_cubicle_name,
+        s_relay_ikss_line_attr,
+        _s_relay_side_bus_attr,
+    ) = get_relay_side_and_cubicle(
+        o_first_line_section,
+        o_relay_busbar,
+    )
+
+    f_relay_reference_ikss_ka, _s_relay_reference_ikss_source = (
+        read_relay_reference_ikss(
+            o_relay_side_cubicle or o_relay_cubicle,
+            o_first_line_section,
+            s_relay_ikss_line_attr,
+        )
+    )
+
+    # ------------------------------------------------------------------
+    # Zone 1 and Zone 2 infeed summaries
+    # ------------------------------------------------------------------
+    d_zone1_infeed = calculate_zone_infeed_summary_for_turbines(
+        o_project,
+        o_app,
+        o_grid,
+        o_relay_busbar,
+        o_relay_side_cubicle or o_relay_cubicle,
+        o_first_line_section,
+        s_relay_ikss_line_attr,
+        l_zone1_turbines,
+        l_protected_corridor_lines[:],
+        d_zone_reaches.get("zone1_r_reach_ohm", 0.0),
+        d_zone_reaches.get("zone1_x_reach_ohm", 0.0),
+        f_relay_reference_ikss_ka,
+        "zone1",
+        l_all_grid_dg=l_cached_all_grid_dg,
+    )
+
+    d_zone2_infeed = calculate_zone_infeed_summary_for_turbines(
+        o_project,
+        o_app,
+        o_grid,
+        o_relay_busbar,
+        o_relay_side_cubicle or o_relay_cubicle,
+        o_first_line_section,
+        s_relay_ikss_line_attr,
+        l_zone2_turbines,
+        l_protected_corridor_lines + d_zone2_branch.get("Branch Lines", []),
+        d_zone_reaches.get("zone2_r_reach_ohm", 0.0),
+        d_zone_reaches.get("zone2_x_reach_ohm", 0.0),
+        f_relay_reference_ikss_ka,
+        "zone2",
+        l_all_grid_dg=l_cached_all_grid_dg,
+    )
+
+    # ------------------------------------------------------------------
+    # Reused branch helper lists
+    # ------------------------------------------------------------------
+    l_zone2_branch_terminals = d_zone2_branch.get("Branch Terminals", [])
+
+    l_zone2_branch_junction_terminals = [
+        o_terminal
+        for o_terminal in l_zone2_branch_terminals
+        if get_terminal_is_junction_node(o_terminal)
+    ]
+
+    l_zone2_branch_distributed_generators = (
+        get_unique_distributed_generators_from_terminals(
+            l_zone2_branch_terminals,
+        )
+    )
+
+    # ------------------------------------------------------------------
+    # Build final flat row.
+    # Do not rename these dictionary keys. They are the exported schema.
+    # ------------------------------------------------------------------
+    d_case_row = {
+        "case_id": f"{i_case_index:05d}",
+        "relay_id": s_relay_id,
+        "relay_node_id": s_relay_node_name,
+        "subsequent_node_id": s_subsequent_node_name,
+        "protected_corridor_id": s_protected_corridor_id,
+
+        "protected_corridor_length_km": d_corridor.get("total_length_km", 0.0),
+        "protected_corridor_r_ohm": d_corridor.get("total_r_ohm", 0.0),
+        "protected_corridor_x_ohm": d_corridor.get("total_x_ohm", 0.0),
+        "corridor_hop_count": d_corridor.get("hop_count", 0),
+        "line_is_in_service": 1,
+
+        "protected_corridor_is_parallel": get_boolean_value(
+            bool(d_parallel_summary.get("is_parallel"))
+        ),
+        "protected_corridor_parallel_count": d_parallel_summary.get(
+            "parallel_count",
+            1,
+        ),
+        "protected_corridor_parallel_id": (
+            get_parallel_protected_corridor_line_names(
+                d_corridor,
+                l_all_corridors,
+            )
+        ),
+
+        "next_node_busbar_count": d_next_node_summary.get("busbar_count", 0),
+        "next_node_junction_node_count": d_next_node_summary.get(
+            "junction_node_count",
+            0,
+        ),
+        "next_node_distributed_generation_count": d_next_node_summary.get(
+            "distributed_generation_count",
+            0,
+        ),
+
+        "shortest_downstream_branch_id": d_zone2_branch.get("Branch ID", ""),
+        "shortest_downstream_branch_remote_node_id": d_zone2_branch.get(
+            "Remote Node ID",
+            "",
+        ),
+        "shortest_downstream_branch_hop_count": int(
+            d_zone2_branch.get("Hop Count", 0)
+        ),
+        "shortest_downstream_branch_length_km": d_zone2_branch.get(
+            "Branch Length",
+            0.0,
+        ),
+        "shortest_downstream_branch_r_ohm": d_zone2_branch.get(
+            "Branch Resistance",
+            0.0,
+        ),
+        "shortest_downstream_branch_x_ohm": d_zone2_branch.get(
+            "Branch Reactance",
+            0.0,
+        ),
+        "shortest_downstream_branch_has_parallel": get_boolean_value(
+            d_zone2_branch.get("Has Parallel", False)
+        ),
+        "shortest_downstream_branch_parallel_count": int(
+            d_zone2_branch.get("Parallel Count", 0)
+        ),
+        "shortest_downstream_branch_parallel_id": d_zone2_branch.get(
+            "Parallel Lines",
+            "",
+        ),
+        "shortest_downstream_branch_junction_node_count": len(
+            l_zone2_branch_junction_terminals
+        ),
+        "shortest_downstream_branch_junction_node_id": " | ".join(
+            [
+                get_safe_name(o_terminal)
+                for o_terminal in l_zone2_branch_junction_terminals
+            ]
+        ),
+        "shortest_downstream_branch_distributed_generation_count": len(
+            l_zone2_branch_distributed_generators
+        ),
+        "shortest_downstream_branch_distributed_generation_id": " | ".join(
+            [
+                get_safe_name(o_dg)
+                for o_dg in l_zone2_branch_distributed_generators
+            ]
+        ),
+
+        "zone2_branch_selection_method": d_zone_reaches.get(
+            "zone2_branch_selection_method",
+            "",
+        ),
+        "zone2_selected_branch_id": d_zone_reaches.get(
+            "zone2_downstream_branch_id",
+            "",
+        ),
+        "zone2_reach_calculation_method": d_zone_reaches.get(
+            "zone2_reach_calculation_method",
+            "",
+        ),
+        "zone2_impedance_basis": d_zone_reaches.get(
+            "zone2_impedance_basis",
+            "",
+        ),
+
+        "parallel_group_count_forward": i_parallel_group_count_forward,
+        "parallel_group_id": d_zone_reaches.get(
+            "zone2_parallel_branch_for_complex_id",
+            "",
+        ),
+        "zone2_parallel_branch_for_complex_length_km": d_zone_reaches.get(
+            "zone2_parallel_branch_for_complex_length_km",
+            0.0,
+        ),
+        "zone2_parallel_branch_for_complex_r_ohm": d_zone_reaches.get(
+            "zone2_parallel_branch_for_complex_r_ohm",
+            0.0,
+        ),
+        "zone2_parallel_branch_for_complex_x_ohm": d_zone_reaches.get(
+            "zone2_parallel_branch_for_complex_x_ohm",
+            0.0,
+        ),
+
+        "zone3_branch_selection_method": d_zone_reaches.get(
+            "zone3_branch_selection_method",
+            "",
+        ),
+        "zone3_selected_branch_id": d_zone_reaches.get(
+            "zone3_downstream_branch_id",
+            "",
+        ),
+        "longest_downstream_branch_hop_count": len(
+            [
+                s_line_id
+                for s_line_id in d_zone_reaches.get(
+                    "zone3_downstream_branch_id",
+                    "",
+                ).split(" | ")
+                if s_line_id.strip()
+            ]
+        ),
+        "longest_downstream_branch_length_km": d_zone_reaches.get(
+            "zone3_downstream_branch_length_km",
+            0.0,
+        ),
+        "longest_downstream_branch_r_ohm": d_zone_reaches.get(
+            "zone3_downstream_branch_r_ohm",
+            0.0,
+        ),
+        "longest_downstream_branch_x_ohm": d_zone_reaches.get(
+            "zone3_downstream_branch_x_ohm",
+            0.0,
+        ),
+
+        "relay_busbar_distributed_generation_count": d_dg_context[
+            "relay_busbar"
+        ].get("count", 0),
+        "relay_busbar_distributed_generation_id": d_dg_context[
+            "relay_busbar"
+        ].get("names", ""),
+        "relay_busbar_distributed_generation_capacity_mva": d_dg_context[
+            "relay_busbar"
+        ].get("capacity_mva", 0.0),
+
+        "protected_corridor_distributed_generation_count": d_dg_context[
+            "protected_corridor"
+        ].get("count", 0),
+        "protected_corridor_distributed_generation_id": d_dg_context[
+            "protected_corridor"
+        ].get("names", ""),
+        "protected_corridor_distributed_generation_capacity_mva": d_dg_context[
+            "protected_corridor"
+        ].get("capacity_mva", 0.0),
+
+        "subsequent_busbar_distributed_generation_count": d_dg_context[
+            "subsequent_busbar"
+        ].get("count", 0),
+        "subsequent_busbar_distributed_generation_id": d_dg_context[
+            "subsequent_busbar"
+        ].get("names", ""),
+        "subsequent_busbar_distributed_generation_capacity_mva": d_dg_context[
+            "subsequent_busbar"
+        ].get("capacity_mva", 0.0),
+
+        "downstream_branch_distributed_generation_count": d_dg_context[
+            "downstream_branch"
+        ].get("count", 0),
+        "downstream_branch_distributed_generation_id": d_dg_context[
+            "downstream_branch"
+        ].get("names", ""),
+        "downstream_branch_distributed_generation_capacity_mva": d_dg_context[
+            "downstream_branch"
+        ].get("capacity_mva", 0.0),
+
+        "remote_busbar_distributed_generation_count": d_dg_context[
+            "remote_busbar"
+        ].get("count", 0),
+        "remote_busbar_distributed_generation_id": d_dg_context[
+            "remote_busbar"
+        ].get("names", ""),
+        "remote_busbar_distributed_generation_capacity_mva": d_dg_context[
+            "remote_busbar"
+        ].get("capacity_mva", 0.0),
+
+        "zone1_turbines_candidate_count": d_zone1_infeed.get(
+            "turbines_candidate_count",
+            0,
+        ),
+        "zone1_turbines_candidate_id": d_zone1_infeed.get(
+            "turbines_candidate_id",
+            "",
+        ),
+        "zone1_turbines_considered_count": d_zone1_infeed.get(
+            "turbines_considered_count",
+            0,
+        ),
+        "zone1_turbines_considered_id": d_zone1_infeed.get(
+            "turbines_considered_id",
+            "",
+        ),
+        "zone1_turbines_skipped_count": d_zone1_infeed.get(
+            "turbines_skipped_count",
+            0,
+        ),
+        "zone1_turbines_skipped_id": d_zone1_infeed.get(
+            "turbines_skipped_id",
+            "",
+        ),
+        "zone1_turbines_total_capacity_mva": d_zone1_infeed.get(
+            "turbines_total_capacity_mva",
+            0.0,
+        ),
+        "zone1_total_ikss_contribution_ratio": d_zone1_infeed.get(
+            "total_ikss_contribution_ratio",
+            0.0,
+        ),
+        "zone1_max_single_ikss_contribution_ratio": d_zone1_infeed.get(
+            "max_single_ikss_contribution_ratio",
+            0.0,
+        ),
+
+        "zone2_turbines_candidate_count": d_zone2_infeed.get(
+            "turbines_candidate_count",
+            0,
+        ),
+        "zone2_turbines_candidate_id": d_zone2_infeed.get(
+            "turbines_candidate_id",
+            "",
+        ),
+        "zone2_turbines_considered_count": d_zone2_infeed.get(
+            "turbines_considered_count",
+            0,
+        ),
+        "zone2_turbines_considered_id": d_zone2_infeed.get(
+            "turbines_considered_id",
+            "",
+        ),
+        "zone2_turbines_skipped_count": d_zone2_infeed.get(
+            "turbines_skipped_count",
+            0,
+        ),
+        "zone2_turbines_skipped_id": d_zone2_infeed.get(
+            "turbines_skipped_id",
+            "",
+        ),
+        "zone2_turbines_total_capacity_mva": d_zone2_infeed.get(
+            "turbines_total_capacity_mva",
+            0.0,
+        ),
+        "zone2_total_ikss_contribution_ratio": d_zone2_infeed.get(
+            "total_ikss_contribution_ratio",
+            0.0,
+        ),
+        "zone2_max_single_ikss_contribution_ratio": d_zone2_infeed.get(
+            "max_single_ikss_contribution_ratio",
+            0.0,
+        ),
+
+        "base_zone1_r_reach_ohm": d_zone_reaches.get(
+            "zone1_r_reach_ohm",
+            0.0,
+        ),
+        "base_zone1_x_reach_ohm": d_zone_reaches.get(
+            "zone1_x_reach_ohm",
+            0.0,
+        ),
+        "zone1_infeed_correction_r_ohm": d_zone1_infeed.get(
+            "infeed_correction_r_ohm",
+            0.0,
+        ),
+        "zone1_infeed_correction_x_ohm": d_zone1_infeed.get(
+            "infeed_correction_x_ohm",
+            0.0,
+        ),
+        "target_zone1_r_reach_ohm": round(
+            d_zone_reaches.get("zone1_r_reach_ohm", 0.0)
+            + d_zone1_infeed.get("infeed_correction_r_ohm", 0.0),
+            3,
+        ),
+        "target_zone1_x_reach_ohm": round(
+            d_zone_reaches.get("zone1_x_reach_ohm", 0.0)
+            + d_zone1_infeed.get("infeed_correction_x_ohm", 0.0),
+            3,
+        ),
+
+        "base_zone2_r_reach_ohm": d_zone_reaches.get(
+            "zone2_r_reach_ohm",
+            0.0,
+        ),
+        "base_zone2_x_reach_ohm": d_zone_reaches.get(
+            "zone2_x_reach_ohm",
+            0.0,
+        ),
+        "zone2_infeed_correction_r_ohm": d_zone2_infeed.get(
+            "infeed_correction_r_ohm",
+            0.0,
+        ),
+        "zone2_infeed_correction_x_ohm": d_zone2_infeed.get(
+            "infeed_correction_x_ohm",
+            0.0,
+        ),
+        "target_zone2_r_reach_ohm": round(
+            d_zone_reaches.get("zone2_r_reach_ohm", 0.0)
+            + d_zone2_infeed.get("infeed_correction_r_ohm", 0.0),
+            3,
+        ),
+        "target_zone2_x_reach_ohm": round(
+            d_zone_reaches.get("zone2_x_reach_ohm", 0.0)
+            + d_zone2_infeed.get("infeed_correction_x_ohm", 0.0),
+            3,
+        ),
+
+        "base_zone3_r_reach_ohm": d_zone_reaches.get(
+            "zone3_r_reach_ohm",
+            0.0,
+        ),
+        "base_zone3_x_reach_ohm": d_zone_reaches.get(
+            "zone3_x_reach_ohm",
+            0.0,
+        ),
+        "target_zone3_r_reach_ohm": d_zone_reaches.get(
+            "zone3_r_reach_ohm",
+            0.0,
+        ),
+        "target_zone3_x_reach_ohm": d_zone_reaches.get(
+            "zone3_x_reach_ohm",
+            0.0,
+        ),
+    }
+
+    logger.info(
+        f"Processed {i_case_index:03d} - {s_relay_node_name}: "
+        f"{s_relay_id} -> {s_protected_corridor_id} -> "
+        f"{s_subsequent_node_name} "
+        f"-> Z1: {d_case_row.get('target_zone1_r_reach_ohm', 0.0):.2f}|"
+        f"{d_case_row.get('target_zone1_x_reach_ohm', 0.0):.2f}, "
+        f"Z2: {d_case_row.get('target_zone2_r_reach_ohm', 0.0):.2f}|"
+        f"{d_case_row.get('target_zone2_x_reach_ohm', 0.0):.2f}, "
+        f"Z3: {d_case_row.get('target_zone3_r_reach_ohm', 0.0):.2f}|"
+        f"{d_case_row.get('target_zone3_x_reach_ohm', 0.0):.2f}"
+    )
+
+    return {
+        s_column: d_case_row.get(s_column, None)
+        for s_column in l_case_feature_columns
+    }
+
+
+def get_corridor_scenario_rows(
+    o_project,
+    o_grid,
+    o_app,
+    cached_all_grid_dg=None,
+):
+    """
+    Extracts all protected-corridor feature rows for the active grid scenario.
+    """
+
+    l_cached_all_grid_dg = cached_all_grid_dg
+
+    d_network = extract_network_once(
+        o_grid,
+        o_app,
+    )
+
+    l_protected_corridors = detect_protected_corridors_once(d_network)
+
+    l_protected_corridors = sorted(
+        l_protected_corridors,
+        key=lambda d_corridor: (
+            get_safe_name(d_corridor.get("relay_busbar")),
+            get_safe_name(d_corridor.get("subsequent_busbar")),
+            get_branch_line_names(d_corridor.get("line_sections", [])),
+        ),
+    )
+
+    return [
+        get_case_feature_dict_for_corridor(
+            o_project,
+            o_app,
+            o_grid,
+            d_corridor,
+            d_network,
+            l_protected_corridors,
+            i_case_index,
+            cached_all_grid_dg=l_cached_all_grid_dg,
+        )
+        for i_case_index, d_corridor in enumerate(l_protected_corridors, 1)
+    ]

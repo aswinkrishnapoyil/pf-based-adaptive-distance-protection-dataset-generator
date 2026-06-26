@@ -1,8 +1,48 @@
-/Results/*.parquet
-/Results/*.csv
-/Results/*.xlsx
-/Results/*.json
-/logs/
+# Python cache files
 __pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build/package artifacts
+build/
+dist/
+*.egg-info/
+
+# Logs
+logs/
+*.log
+
+# Generated dataset outputs
+Results/
+*.parquet
+*.xlsx
+
+# Optional large/generated data files
+*.feather
+*.h5
+*.hdf5
+
+# IDE/editor files
+.vscode/
+.idea/
+
+# OS files
 .DS_Store
-~$*
+Thumbs.db
+
+# PowerFactory/local project files
+*.pfd
+*.IntPrj
+*.dz
+*.pfdx
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

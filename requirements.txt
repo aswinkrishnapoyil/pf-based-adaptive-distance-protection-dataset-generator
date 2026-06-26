@@ -1,6 +1,3 @@
 pandas
-<<<<<<< Updated upstream
+openpyxl
 pyarrow
-=======
-pyarrow
->>>>>>> Stashed changes
