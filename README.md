@@ -1,11 +1,5 @@
 ﻿# PF-Based Adaptive Distance Protection Dataset Generator
 
-This repository contains a modular Python pipeline for generating adaptive distance-protection datasets from DIgSILENT PowerFactory. 
-
-The pipeline creates switch-state and randomized operating scenarios, extracts distance-protection corridor features, calculates protection-zone reaches, evaluates distributed-generation infeed effects, and exports both flat tabular data and graph-array style data for machine-learning workflows.
-
-## 🎯 Project Purpose
-
 The goal of this project is to generate structured datasets for predicting or analyzing adaptive distance-protection parameters in distribution or sub-transmission grids with distributed generation (DG).
 
 **The generated dataset includes:**
@@ -18,54 +12,45 @@ The goal of this project is to generate structured datasets for predicting or an
 * Randomized line-length and DG-capacity scenario metadata
 * Graph-array representations of the network scenario
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 pf-based-adaptive-distance-protection-dataset-generator/
-│
 ├── main_script.py
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-│
 └── pf_adaptive_distance_dataset/
-    │
     ├── core/
     │   ├── config.py
     │   ├── models.py
     │   └── dataset_schema.py
-    │
     ├── pf_api/
     │   ├── pf_session.py
     │   ├── pf_utils.py
     │   ├── slave_cases.py
     │   ├── state_capture.py
     │   └── grid_state.py
-    │
     ├── domain/
     │   ├── topology.py
     │   ├── network_topology.py
     │   ├── dg_utils.py
     │   ├── zone_reach.py
     │   └── infeed.py
-    │
     ├── pipeline/
     │   ├── dataset_generator.py
     │   ├── switch_states.py
     │   ├── randomization.py
     │   └── case_features.py
-    │
     ├── graph/
     │   ├── graph_arrays.py
     │   └── graph_array_utils.py
-    │
     └── exports/
         ├── export.py
         └── validation.py
-
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Requirements
 
@@ -99,7 +84,7 @@ python main_script.py
 6. Builds graph-array scenario rows
 7. Exports dataset files and audit outputs
 
-## ⚙️ Configuration
+## Configuration
 
 ### PowerFactory Settings
 
@@ -138,9 +123,10 @@ DG_CAPACITY_SCALE_MAX = 1.2
 
 ```
 
-*Example runtime with the above config: `2 switch states × (1 base scenario + 1 randomized scenario) = 4 scenario runs*`
+*Example runtime with the above config: 
+`2 switch states × (1 base scenario + 1 randomized scenario) = 4 scenario runs*`
 
-## 📊 Inputs and Outputs
+## Inputs and Outputs
 
 ### Switch-State Input
 
@@ -164,11 +150,11 @@ Each switch value is normalized as:
 
 Generated outputs are written to the `Results/` directory. Typical outputs include:
 
-* Flat CSV rows for corridor-level machine-learning features
-* Graph-array scenario rows (`.parquet`)
-* Excel audit files (`.xlsx`)
+* Flat `.csv` rows for corridor-level features
+* Graph-array scenario rows `.parquet`
+* `.xlsx` audit files
 * Randomization logs
-* Dataset statistics and metadata JSON files
+* Dataset statistics and metadata `.json` files
 
 > *Generated outputs and logs are intentionally ignored by Git.*
 
@@ -190,7 +176,7 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 * Switched Y-bus arrays
 * Switch-state vectors and scenario metadata
 
-## 📦 Package Overview
+## Package Overview
 
 * **`core`**: Configuration, dataclasses, and dataset schema definitions.
 * **`pf_api`**: PowerFactory session handling, safe attribute access, slave-case management, grid-state capture, and state restoration utilities.
@@ -199,23 +185,7 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 * **`graph`**: Utilities for converting scenario rows into graph-array representations.
 * **`exports`**: Streaming export, validation, statistics, and audit writing logic.
 
-## 🛠 Development Checks
-
-Before committing changes, ensure your code compiles correctly:
-
-```bash
-python -m py_compile main_script.py
-python -m compileall pf_adaptive_distance_dataset
-python -c "import main_script; print('main_script import ok')"
-
-```
-
-*Expected output: `main_script import ok*`
-
-**Git Notes:**
-Generated files should not be committed. The `.gitignore` excludes `Results/`, `logs/`, `__pycache__/`, `*.parquet`, `*.xlsx`, `*.log`, as well as temporary PF files.
-
-## 🔄 Reproducibility
+## Reproducibility
 
 By default, the random seed is auto-generated based on timestamp and process ID:
 
@@ -230,11 +200,3 @@ For repeatable dataset generation, set a fixed integer value in `config.py`:
 RANDOM_SEED_BASE = 123456
 
 ```
-
-## ⚠️ Notes and Limitations
-
-* Requires access to a local DIgSILENT PowerFactory installation.
-* The `powerfactory` Python module must be available through the configured Python path.
-* Target object names (study cases, scenarios, grids) must exactly match the active project.
-* Generated datasets depend on the active PowerFactory model, the switch-state CSV, and randomization settings.
-* Designed for controlled research and dataset-generation workflows, **not** for direct real-time protection operation.
