@@ -3,28 +3,27 @@ from __future__ import annotations
 
 import logging
 
-from config import Config
+from ..core.config import Config
+from ..core.dataset_schema import l_case_feature_columns
 
-from dataset_schema import l_case_feature_columns
-
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_boolean_value,
     get_safe_name,
     get_unique_objects,
 )
 
-from topology import (
+from ..domain.topology import (
     get_terminal_is_junction_node,
     get_relay_id_from_terminal_and_line,
     get_branch_line_names,
 )
 
-from dg_utils import (
+from ..domain.dg_utils import (
     get_unique_distributed_generators_from_terminals,
     summarize_dg_by_corridor_location,
 )
 
-from network_topology import (
+from ..domain.network_topology import (
     extract_network_once,
     detect_protected_corridors_once,
     build_empty_branch_summary,
@@ -35,13 +34,13 @@ from network_topology import (
     select_zone2_downstream_branch_group,
 )
 
-from zone_reach import (
+from ..domain.zone_reach import (
     select_zone3_longest_valid_downstream_branch,
     count_forward_parallel_branch_groups_for_corridor,
     calculate_distance_zone_reaches_for_corridor,
 )
 
-from infeed import (
+from ..domain.infeed import (
     split_protected_corridor_turbines_by_zone_reach,
     get_relay_side_and_cubicle,
     read_relay_reference_ikss,

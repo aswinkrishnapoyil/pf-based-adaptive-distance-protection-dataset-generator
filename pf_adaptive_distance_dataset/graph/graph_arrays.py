@@ -4,9 +4,9 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from models import PhysicalEdge
+from ..core.models import PhysicalEdge
 
-from dataset_schema import (
+from ..core.dataset_schema import (
     base_reach_columns,
     reach_infeed_correction_columns,
     target_reach_columns,
@@ -14,7 +14,7 @@ from dataset_schema import (
     directed_string_context_columns,
 )
 
-from graph_array_utils import (
+from .graph_array_utils import (
     clean_string,
     to_float,
     to_int,

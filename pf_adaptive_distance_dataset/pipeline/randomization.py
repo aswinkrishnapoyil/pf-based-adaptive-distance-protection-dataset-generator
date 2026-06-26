@@ -5,14 +5,14 @@ import logging
 import random
 from typing import Optional
 
-from config import Config, PFAttr
-from pf_utils import (
+from ..core.config import Config, PFAttr
+
+from ..pf_api.pf_utils import (
     get_safe_name,
     get_safe_full_name,
     get_pf_attribute,
     safe_set_attribute,
 )
-
 
 logger = logging.getLogger(__name__)
 

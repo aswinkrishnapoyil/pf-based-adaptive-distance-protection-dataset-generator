@@ -1,23 +1,23 @@
 # state_capture.py
 from __future__ import annotations
 
-from config import PFAttr
+from ..core.config import PFAttr
 
-from pf_utils import (
+from .pf_utils import (
     get_safe_full_name,
     get_pf_attribute,
     get_unique_objects,
     is_object_inside_grid,
 )
 
-from topology import (
+from ..domain.topology import (
     get_terminal_from_cubicle,
     get_line_terminals,
     get_line_impedance,
     get_line_length_value,
 )
 
-from switch_states import (
+from ..pipeline.switch_states import (
     build_cubicle_lookup,
     get_first_cubicle_switch,
     get_switch_state_outserv_controlled_objects,

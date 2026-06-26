@@ -4,8 +4,8 @@ from __future__ import annotations
 import sys
 import logging
 
-from config import Config
-from pf_utils import get_safe_name
+from ..core.config import Config
+from .pf_utils import get_safe_name
 
 
 logger = logging.getLogger(__name__)

@@ -1,16 +1,16 @@
 # dg_utils.py
 from __future__ import annotations
 
-from config import PFAttr
+from ..core.config import PFAttr
 
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_boolean_value,
     get_safe_name,
     get_pf_attribute,
     get_unique_objects,
 )
 
-from topology import (
+from .topology import (
     get_terminal_from_cubicle,
     get_terminal_connected_distributed_generators,
     get_opposite_terminal,

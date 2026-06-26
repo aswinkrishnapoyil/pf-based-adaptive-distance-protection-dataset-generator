@@ -3,16 +3,16 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from config import Config
+from ..core.config import Config
 
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_boolean_value,
     get_safe_full_name,
 )
 
-from topology import get_branch_line_names
+from .topology import get_branch_line_names
 
-from network_topology import (
+from .network_topology import (
     build_empty_branch_summary,
     filter_valid_downstream_branches_excluding_relay_return,
     select_zone2_downstream_branch_group,

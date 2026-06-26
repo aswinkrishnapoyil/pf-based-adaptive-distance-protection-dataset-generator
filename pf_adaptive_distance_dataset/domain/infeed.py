@@ -1,9 +1,9 @@
 # infeed.py
 from __future__ import annotations
 
-from config import PFAttr
+from ..core.config import PFAttr
 
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_safe_name,
     get_pf_attribute,
     safe_set_attribute,
@@ -12,7 +12,7 @@ from pf_utils import (
     is_object_inside_grid,
 )
 
-from topology import (
+from .topology import (
     get_terminal_from_cubicle,
     get_opposite_terminal,
     get_line_length_value,
@@ -22,7 +22,7 @@ from topology import (
     get_terminal_is_junction_node,
 )
 
-from dg_utils import (
+from .dg_utils import (
     get_unique_distributed_generators_from_terminals,
     get_distributed_generator_capacity_mva,
     get_connected_terminal_for_distributed_generator,

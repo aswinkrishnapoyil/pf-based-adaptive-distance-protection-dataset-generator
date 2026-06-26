@@ -5,8 +5,9 @@ import os
 
 import pandas as pd
 
-from config import Config, PFAttr, SWITCH_STATE_FILE
-from pf_utils import (
+from ..core.config import Config, PFAttr, SWITCH_STATE_FILE
+
+from ..pf_api.pf_utils import (
     get_pf_attribute,
     safe_set_attribute,
     get_unique_objects,

@@ -3,11 +3,9 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from config import (
-    PFAttr,
-)
+from ..core.config import PFAttr
 
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_boolean_value,
     get_safe_name,
     get_safe_full_name,
@@ -16,7 +14,7 @@ from pf_utils import (
     is_object_inside_grid,
 )
 
-from topology import (
+from .topology import (
     get_terminal_from_cubicle,
     get_opposite_terminal,
     get_line_impedance,
@@ -31,7 +29,7 @@ from topology import (
     get_branch_line_names,
 )
 
-from dg_utils import (
+from .dg_utils import (
     get_unique_distributed_generators_from_terminals,
 )
 

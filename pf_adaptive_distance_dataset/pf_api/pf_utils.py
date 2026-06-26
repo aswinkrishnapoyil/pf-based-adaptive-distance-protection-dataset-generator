@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from config import PFAttr
+from ..core.config import PFAttr
 
 
 def get_boolean_value(b_value: Any) -> int:

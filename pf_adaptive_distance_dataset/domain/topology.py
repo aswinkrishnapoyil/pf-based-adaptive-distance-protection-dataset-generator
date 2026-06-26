@@ -1,9 +1,9 @@
 # topology.py
 from __future__ import annotations
 
-from config import PFAttr
+from ..core.config import PFAttr
 
-from pf_utils import (
+from ..pf_api.pf_utils import (
     get_safe_name,
     get_safe_class_name,
     get_safe_full_name,

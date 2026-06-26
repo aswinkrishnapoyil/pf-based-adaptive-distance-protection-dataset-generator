@@ -1,8 +1,8 @@
 # grid_state.py
 from __future__ import annotations
 
-from config import PFAttr
-from pf_utils import safe_set_attribute
+from ..core.config import PFAttr
+from .pf_utils import safe_set_attribute
 
 
 def restore_grid_state(orig_lines, orig_dgs, orig_out, orig_sw):
