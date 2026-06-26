@@ -137,7 +137,6 @@ Switch-state configurations are read from:
 
 ```text
 Results/Switch State/Switch_state.csv
-
 ```
 
 Switch-state columns must use the prefix `switch_` (e.g., `ConfigID,switch_<rdf_id_1>,switch_<rdf_id_2>`).
@@ -147,7 +146,7 @@ Each switch value is normalized as:
 * `1` = closed
 * `0` = open
 
-*(If switch-state scenarios are disabled, the pipeline defaults to the live grid state).*
+*If switch-state scenarios are disabled, the pipeline defaults to the live grid state.*
 
 ### Output Files
 
@@ -158,26 +157,6 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 * `.xlsx` audit files
 * Randomization logs
 * Dataset statistics and metadata `.json` files
-
-> *Generated outputs and logs are intentionally ignored by Git.*
-
-### Dataset Content
-
-**The flat dataset contains:**
-
-* Relay and corridor identifiers
-* Protected corridor length, resistance, and reactance
-* Parallel corridor indicators and downstream branch features
-* Zone 1, Zone 2, and Zone 3 reach values
-* DG counts, capacities, and infeed correction values
-* Final target reach values
-
-**The graph-array dataset contains:**
-
-* Bus/node identifiers
-* Directed edge and physical edge arrays
-* Switched Y-bus arrays
-* Switch-state vectors and scenario metadata
 
 ## Package Overview
 
