@@ -1,36 +1,8 @@
-﻿As an AI, I don't have the ability to send direct file downloads (like a `.zip` or a `.md` file attachment) to your computer.
-
-However, getting the file is quick and easy! Just click the **"Copy code"** button in the top right corner of the block below, paste it into your editor (like VS Code, Notepad, or PyCharm), and save it exactly as `README.md`.
-
-```markdown
-# PF-Based Adaptive Distance Protection Dataset Generator
+﻿# PF-Based Adaptive Distance Protection Dataset Generator
 
 This repository contains a modular Python pipeline for generating adaptive distance-protection datasets from DIgSILENT PowerFactory. 
 
 The pipeline creates switch-state and randomized operating scenarios, extracts distance-protection corridor features, calculates protection-zone reaches, evaluates distributed-generation infeed effects, and exports both flat tabular data and graph-array style data for machine-learning workflows.
-
----
-
-## 📑 Table of Contents
-- [Project Purpose](#project-purpose)
-- [Repository Structure](#repository-structure)
-- [Getting Started](#getting-started)
-  - [Requirements](#requirements)
-  - [Main Entry Point](#main-entry-point)
-- [Configuration](#configuration)
-  - [PowerFactory Settings](#powerfactory-settings)
-  - [Scenario Configuration](#scenario-configuration)
-- [Inputs and Outputs](#inputs-and-outputs)
-  - [Switch-State Input](#switch-state-input)
-  - [Output Files](#output-files)
-  - [Dataset Content](#dataset-content)
-- [Package Overview](#package-overview)
-- [Development Checks](#development-checks)
-- [Reproducibility](#reproducibility)
-- [Notes and Limitations](#notes-and-limitations)
-- [License](#license)
-
----
 
 ## 🎯 Project Purpose
 
@@ -45,8 +17,6 @@ The goal of this project is to generate structured datasets for predicting or an
 * Switch-state scenario metadata
 * Randomized line-length and DG-capacity scenario metadata
 * Graph-array representations of the network scenario
-
----
 
 ## 📂 Repository Structure
 
@@ -95,8 +65,6 @@ pf-based-adaptive-distance-protection-dataset-generator/
 
 ```
 
----
-
 ## 🚀 Getting Started
 
 ### Requirements
@@ -130,8 +98,6 @@ python main_script.py
 5. Extracts flat corridor-level features
 6. Builds graph-array scenario rows
 7. Exports dataset files and audit outputs
-
----
 
 ## ⚙️ Configuration
 
@@ -173,8 +139,6 @@ DG_CAPACITY_SCALE_MAX = 1.2
 ```
 
 *Example runtime with the above config: `2 switch states × (1 base scenario + 1 randomized scenario) = 4 scenario runs*`
-
----
 
 ## 📊 Inputs and Outputs
 
@@ -226,8 +190,6 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 * Switched Y-bus arrays
 * Switch-state vectors and scenario metadata
 
----
-
 ## 📦 Package Overview
 
 * **`core`**: Configuration, dataclasses, and dataset schema definitions.
@@ -236,8 +198,6 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 * **`pipeline`**: Main dataset generation workflow, switch-state handling, scenario randomization, and flat feature extraction.
 * **`graph`**: Utilities for converting scenario rows into graph-array representations.
 * **`exports`**: Streaming export, validation, statistics, and audit writing logic.
-
----
 
 ## 🛠 Development Checks
 
@@ -255,8 +215,6 @@ python -c "import main_script; print('main_script import ok')"
 **Git Notes:**
 Generated files should not be committed. The `.gitignore` excludes `Results/`, `logs/`, `__pycache__/`, `*.parquet`, `*.xlsx`, `*.log`, as well as temporary PF files.
 
----
-
 ## 🔄 Reproducibility
 
 By default, the random seed is auto-generated based on timestamp and process ID:
@@ -273,8 +231,6 @@ RANDOM_SEED_BASE = 123456
 
 ```
 
----
-
 ## ⚠️ Notes and Limitations
 
 * Requires access to a local DIgSILENT PowerFactory installation.
@@ -282,15 +238,3 @@ RANDOM_SEED_BASE = 123456
 * Target object names (study cases, scenarios, grids) must exactly match the active project.
 * Generated datasets depend on the active PowerFactory model, the switch-state CSV, and randomization settings.
 * Designed for controlled research and dataset-generation workflows, **not** for direct real-time protection operation.
-
----
-
-## 📄 License
-
-*(Add license information here before public release).*
-
-```
-
-If you meant you wanted a script to automatically download/build the entire 22-file directory structure on your machine, let me know! I can write a Python script that will instantly scaffold the whole project for you.
-
-```
