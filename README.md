@@ -193,13 +193,13 @@ Generated outputs are written to the `Results/` directory. Typical outputs inclu
 By default, the random seed is auto-generated based on timestamp and process ID:
 
 ```python
-RANDOM_SEED_BASE = None
+RANDOM_SEED_BASE: Optional[int] = None
 
 ```
 
 For repeatable dataset generation, set a fixed integer value in `config.py`:
 
 ```python
-RANDOM_SEED_BASE = 123456
+RANDOM_SEED_BASE: Optional[int] = 123456
 
 ```
