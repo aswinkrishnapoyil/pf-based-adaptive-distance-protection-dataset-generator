@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 *Required packages:* `pandas`, `openpyxl`, `pyarrow`
 
-> **Note:** The `powerfactory` Python module is not installed via pip. It is provided by your local DIgSILENT PowerFactory installation.
+> **Note:** The `powerfactory` Python module is not installed via pip. It is provided by your local PowerFactory installation.
 
 ### Main Entry Point
 
@@ -77,7 +77,7 @@ python main_script.py
 **The main script performs the full workflow:**
 
 1. Loads switch-state configurations
-2. Opens a DIgSILENT PowerFactory session
+2. Opens a PowerFactory session
 3. Creates slave study cases and slave operation scenarios
 4. Applies switch states and randomized line/DG scenarios
 5. Extracts flat corridor-level features
