@@ -402,6 +402,8 @@ def stream_export_and_audit(
 
     d_statistics = DatasetStatistics()
 
+    i_global_case_id = 0
+
     l_valid_rows_for_statistics: list[dict] = []
     l_audit_rows: list[dict] = []
 
@@ -431,11 +433,19 @@ def stream_export_and_audit(
             )
 
             if b_is_valid:
+                i_global_case_id += 1
+
+                d_export_row = dict(d_row)
+                d_export_row["scenario_case_id"] = d_export_row.get("case_id")
+                d_export_row["case_id"] = i_global_case_id
+
                 d_statistics.total_cases_valid += 1
-                l_valid_flat_rows.append(d_row)
-                l_valid_rows_for_statistics.append(d_row)
+                l_valid_flat_rows.append(d_export_row)
+                l_valid_rows_for_statistics.append(d_export_row)
 
             else:
+                d_export_row = dict(d_row)
+
                 d_statistics.total_cases_invalid += 1
 
                 d_statistics.invalid_case_reasons[s_invalid_reason] = (
@@ -449,14 +459,15 @@ def stream_export_and_audit(
             l_audit_rows.append(
                 {
                     "kind": o_payload.kind,
-                    "case_id": d_row.get("case_id", ""),
-                    "relay_id": d_row.get("relay_id", ""),
-                    "relay_node_id": d_row.get("relay_node_id", ""),
-                    "protected_corridor_id": d_row.get(
+                    "case_id": d_export_row.get("case_id", ""),
+                    "scenario_case_id": d_export_row.get("scenario_case_id", ""),
+                    "relay_id": d_export_row.get("relay_id", ""),
+                    "relay_node_id": d_export_row.get("relay_node_id", ""),
+                    "protected_corridor_id": d_export_row.get(
                         "protected_corridor_id",
                         "",
                     ),
-                    "subsequent_node_id": d_row.get(
+                    "subsequent_node_id": d_export_row.get(
                         "subsequent_node_id",
                         "",
                     ),

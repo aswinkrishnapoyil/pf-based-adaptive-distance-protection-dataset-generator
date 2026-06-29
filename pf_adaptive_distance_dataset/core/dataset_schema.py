@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 l_case_feature_columns = [
-    "case_id", "relay_id", "relay_node_id", "protected_corridor_id", "subsequent_node_id",
+    "case_id", "scenario_case_id", "relay_id", "relay_node_id", "protected_corridor_id", "subsequent_node_id",
     "line_is_in_service", "corridor_hop_count", "protected_corridor_length_km",
     "protected_corridor_r_ohm", "protected_corridor_x_ohm", "protected_corridor_is_parallel",
     "protected_corridor_parallel_count", "protected_corridor_parallel_id",
