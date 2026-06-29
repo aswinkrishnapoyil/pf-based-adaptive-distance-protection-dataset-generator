@@ -129,10 +129,11 @@ Results/Switch State/Switch_state.csv
 
 ### Output Files
 
-Generated outputs are written to the `Results/` directory. Typical outputs include:
+Generated outputs are written to the `Results/` directory. Outputs include:
 
 * Flat `.csv` rows for corridor-level features
 * Graph-array scenario rows `.parquet`
+* ML-Ready Graph `.parquet`
 * `.xlsx` audit files
 * Randomization logs
 * Dataset statistics and metadata `.json` files

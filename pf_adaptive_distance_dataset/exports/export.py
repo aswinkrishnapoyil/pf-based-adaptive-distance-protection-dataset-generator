@@ -31,6 +31,125 @@ from .validation import (
 
 logger = logging.getLogger(__name__)
 
+ML_READY_AUDIT_COLUMNS = [
+    "switch_state_short_id",
+    "switch_state_row_index",
+    "scenario_id",
+    "scenario_uid",
+    "case_uid",
+    "switch_state_open_switch_count",
+    "switch_state_closed_switch_count",
+    "line_length_scale_min",
+    "line_length_scale_max",
+    "dg_capacity_scale_min",
+    "dg_capacity_scale_max",
+]
+
+ML_READY_GLOBAL_GRAPH_FEATURE_COLUMNS = [
+    "switch_count",
+    "switch_status",
+    "bus_number",
+    "bus_typ",
+    "Lines_connected",
+    "Lines_connected_count",
+    "Y_Lines_real",
+    "Y_Lines_imag",
+    "Y_matrix_real",
+    "Y_matrix_imag",
+]
+
+ML_READY_PHYSICAL_EDGE_FEATURE_COLUMNS = [
+    "physical_edge_count",
+    "physical_edge_from_index",
+    "physical_edge_to_index",
+    "physical_edge_length_km",
+    "physical_edge_r_ohm",
+    "physical_edge_x_ohm",
+    "physical_edge_y_real",
+    "physical_edge_y_imag",
+    "physical_edge_is_in_service",
+]
+
+ML_READY_DIRECTED_EDGE_FEATURE_COLUMNS = [
+    "directed_edge_count",
+    "directed_edge_from_index",
+    "directed_edge_to_index",
+    "directed_edge_line_is_in_service",
+    "directed_edge_length_km",
+    "directed_edge_r_ohm",
+    "directed_edge_x_ohm",
+    "directed_edge_hop_count",
+    "directed_edge_is_parallel",
+    "directed_edge_parallel_count",
+]
+
+ML_READY_TOPOLOGY_CONTEXT_FEATURE_COLUMNS = [
+    "next_node_busbar_count",
+    "next_node_junction_node_count",
+    "next_node_distributed_generation_count",
+    "shortest_downstream_branch_hop_count",
+    "shortest_downstream_branch_length_km",
+    "shortest_downstream_branch_r_ohm",
+    "shortest_downstream_branch_x_ohm",
+    "shortest_downstream_branch_has_parallel",
+    "shortest_downstream_branch_parallel_count",
+    "shortest_downstream_branch_junction_node_count",
+    "shortest_downstream_branch_distributed_generation_count",
+    "longest_downstream_branch_hop_count",
+    "longest_downstream_branch_length_km",
+    "longest_downstream_branch_r_ohm",
+    "longest_downstream_branch_x_ohm",
+    "parallel_group_count_forward",
+    "zone2_parallel_branch_for_complex_length_km",
+    "zone2_parallel_branch_for_complex_r_ohm",
+    "zone2_parallel_branch_for_complex_x_ohm",
+]
+
+ML_READY_DG_CONTEXT_FEATURE_COLUMNS = [
+    "relay_busbar_distributed_generation_count",
+    "relay_busbar_distributed_generation_capacity_mva",
+    "protected_corridor_distributed_generation_count",
+    "protected_corridor_distributed_generation_capacity_mva",
+    "subsequent_busbar_distributed_generation_count",
+    "subsequent_busbar_distributed_generation_capacity_mva",
+    "downstream_branch_distributed_generation_count",
+    "downstream_branch_distributed_generation_capacity_mva",
+    "remote_busbar_distributed_generation_count",
+    "remote_busbar_distributed_generation_capacity_mva",
+    "zone1_turbines_candidate_count",
+    "zone1_turbines_considered_count",
+    "zone1_turbines_skipped_count",
+    "zone1_turbines_total_capacity_mva",
+    "zone2_turbines_candidate_count",
+    "zone2_turbines_considered_count",
+    "zone2_turbines_skipped_count",
+    "zone2_turbines_total_capacity_mva",
+]
+
+ML_READY_TARGET_MASK_COLUMNS = [
+    "directed_edge_target_valid",
+]
+
+ML_READY_TARGET_COLUMNS = [
+    "target_zone1_r_reach_ohm",
+    "target_zone1_x_reach_ohm",
+    "target_zone2_r_reach_ohm",
+    "target_zone2_x_reach_ohm",
+    "target_zone3_r_reach_ohm",
+    "target_zone3_x_reach_ohm",
+]
+
+ML_READY_GRAPH_COLUMNS = (
+    ML_READY_AUDIT_COLUMNS
+    + ML_READY_GLOBAL_GRAPH_FEATURE_COLUMNS
+    + ML_READY_PHYSICAL_EDGE_FEATURE_COLUMNS
+    + ML_READY_DIRECTED_EDGE_FEATURE_COLUMNS
+    + ML_READY_TOPOLOGY_CONTEXT_FEATURE_COLUMNS
+    + ML_READY_DG_CONTEXT_FEATURE_COLUMNS
+    + ML_READY_TARGET_MASK_COLUMNS
+    + ML_READY_TARGET_COLUMNS
+)
+
 
 def _csv_has_content(path: Path) -> bool:
     """
@@ -238,6 +357,58 @@ def _write_graph_rows_parquet(path: Path, graph_rows: list[dict]) -> None:
     )
 
 
+def _normalise_ml_ready_graph_row(row: dict) -> dict:
+    """
+    Keeps only ML-ready graph-array columns.
+
+    The ML-ready graph row excludes:
+    - object-name ID columns
+    - random seeds
+    - method/explanation columns
+    - base reach columns
+    - infeed correction columns
+
+    It keeps:
+    - audit columns
+    - physical/topological graph features
+    - DG context features
+    - target mask
+    - final target reach labels
+    """
+
+    d_row = row
+
+    return {
+        s_column: d_row.get(s_column, None)
+        for s_column in ML_READY_GRAPH_COLUMNS
+    }
+
+
+def _write_ml_ready_graph_rows_parquet(
+        path: Path,
+        graph_rows: list[dict],
+) -> None:
+    """
+    Appends ML-ready graph-array scenario rows to a Parquet file.
+    """
+
+    p_ml_ready_parquet_path = path
+    l_graph_rows = graph_rows
+
+    if not l_graph_rows:
+        return
+
+    l_ml_ready_rows = [
+        _normalise_ml_ready_graph_row(d_row)
+        for d_row in l_graph_rows
+    ]
+
+    _write_graph_rows_parquet(
+        p_ml_ready_parquet_path,
+        l_ml_ready_rows,
+    )
+
+
 def _append_audit_rows(
     path: Path,
     rows: list[dict],
@@ -375,6 +546,11 @@ def stream_export_and_audit(
         / f"distance_protection_graph_array_{s_timestamp}.parquet"
     )
 
+    p_ml_ready_graph_parquet_path = (
+            p_output_dir
+            / f"distance_protection_graph_array_ml_ready_{s_timestamp}.parquet"
+    )
+
     p_audit_xlsx_path = (
         p_output_dir
         / f"distance_protection_audit_{s_timestamp}.xlsx"
@@ -488,6 +664,11 @@ def stream_export_and_audit(
                 l_graph_rows,
             )
 
+            _write_ml_ready_graph_rows_parquet(
+                p_ml_ready_graph_parquet_path,
+                l_graph_rows,
+            )
+
         if o_payload.line_logs:
             _write_dict_rows_csv(
                 p_line_log_csv_path,
@@ -538,6 +719,10 @@ def stream_export_and_audit(
 
     logger.info(f"Flat rows written to: {p_flat_csv_path}")
     logger.info(f"Graph array Parquet written to: {p_graph_parquet_path}")
+    logger.info(
+        f"ML-ready graph array Parquet written to: "
+        f"{p_ml_ready_graph_parquet_path}"
+    )
     logger.info(f"Audit written to: {p_audit_xlsx_path}")
     logger.info(f"Metadata written to: {p_metadata_json_path}")
     logger.info(f"Statistics written to: {p_statistics_json_path}")
