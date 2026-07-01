@@ -107,6 +107,8 @@ def main():
             ),
             notes=(
                 "Single-run streamed grid protection dataset. "
+                "Line randomization is length-based only: dline is varied and "
+                "PowerFactory updates effective R1/X1 from the original TypTow model. "
                 "Excel audit and final dataframe statistics are based on valid exported rows."
             ),
         )

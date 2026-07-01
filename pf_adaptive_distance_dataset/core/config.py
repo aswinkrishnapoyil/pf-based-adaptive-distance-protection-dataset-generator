@@ -44,13 +44,13 @@ class Config:
 
     # --- Switch State Controls ---
     ENABLE_SWITCH_STATE_SCENARIOS = True
-    MAX_SWITCH_STATE_CONFIG_COUNT = 2
+    MAX_SWITCH_STATE_CONFIG_COUNT = None
 
     # --- Base Case & Randomization Volume ---
     INCLUDE_ORIGINAL_BASE_CASE = True
-    RANDOMIZED_SCENARIO_COUNT = 1
+    RANDOMIZED_SCENARIO_COUNT = 2
 
-    # --- Line Length Randomization ---
+    # --- Line Parameter Randomization ---
     ENABLE_LINE_RANDOMIZATION = True
     LINE_LENGTH_SCALE_MIN = 0.8
     LINE_LENGTH_SCALE_MAX = 1.2
@@ -91,6 +91,8 @@ class PFAttr:
     LINE_R = "R1"
     LINE_X = "X1"
     LINE_LENGTH = "dline"
+
+    LINE_TYPE = "typ_id"
 
     SWITCH_STATE = "on_off"
     TERMINAL_USAGE = "iUsage"

@@ -79,6 +79,9 @@ def capture_original_state_from_active_slave(grid, app):
             "l": get_line_length_value(o_line),
             "r": f_line_r_ohm,
             "x": f_line_x_ohm,
+
+            # Original shared line type. This must be restored after each scenario.
+            "typ_id": get_pf_attribute(o_line, PFAttr.LINE_TYPE),
         }
 
     # ------------------------------------------------------------

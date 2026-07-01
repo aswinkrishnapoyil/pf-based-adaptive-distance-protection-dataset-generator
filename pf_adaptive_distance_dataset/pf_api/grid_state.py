@@ -9,10 +9,14 @@ def restore_grid_state(orig_lines, orig_dgs, orig_out, orig_sw):
     """
     Restore the active slave grid state to the captured baseline.
     Restores:
-    - line length and impedance
+    - original line type assignment
+    - original line length
     - DG capacity
     - component outserv states
     - switch on/off states
+
+    Line R1/X1 are not restored directly. In the approved production
+    approach, line randomization is performed only through dline.
     """
 
     d_original_line_states = orig_lines
@@ -21,7 +25,7 @@ def restore_grid_state(orig_lines, orig_dgs, orig_out, orig_sw):
     d_original_switch_states = orig_sw
 
     # ------------------------------------------------------------------
-    # Restore line length and impedance values
+    # Restore original line type and line length
     # ------------------------------------------------------------------
     for d_line_state in d_original_line_states.values():
         o_line = d_line_state.get("obj")
@@ -30,25 +34,22 @@ def restore_grid_state(orig_lines, orig_dgs, orig_out, orig_sw):
             continue
 
         f_original_line_length_km = d_line_state.get("l", 0.0)
-        f_original_line_r_ohm = d_line_state.get("r", 0.0)
-        f_original_line_x_ohm = d_line_state.get("x", 0.0)
+        o_original_line_type = d_line_state.get("typ_id")
 
+        # First restore the original line type, so the line no longer points
+        # to the temporary cloned type.
+        if o_original_line_type is not None:
+            safe_set_attribute(
+                o_line,
+                PFAttr.LINE_TYPE,
+                o_original_line_type,
+            )
+
+        # Restore original line length.
         safe_set_attribute(
             o_line,
             PFAttr.LINE_LENGTH,
             f_original_line_length_km,
-        )
-
-        safe_set_attribute(
-            o_line,
-            PFAttr.LINE_R,
-            f_original_line_r_ohm,
-        )
-
-        safe_set_attribute(
-            o_line,
-            PFAttr.LINE_X,
-            f_original_line_x_ohm,
         )
 
     # ------------------------------------------------------------------

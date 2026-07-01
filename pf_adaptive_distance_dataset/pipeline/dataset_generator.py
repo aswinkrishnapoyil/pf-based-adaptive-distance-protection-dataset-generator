@@ -24,7 +24,7 @@ from ..pf_api.slave_cases import (
 )
 
 from .randomization import (
-    apply_random_line_length_scenario,
+    apply_random_line_parameter_scenario,
     apply_random_dg_capacity_scenario,
 )
 
@@ -362,7 +362,7 @@ def _apply_randomization_for_scenario(
     orig_dgs: dict,
 ) -> tuple[list[dict], list[dict]]:
     """
-    Applies line-length and DG-capacity randomization for one non-base scenario.
+    Applies line-length-based line randomization and DG-capacity randomization for one non-base scenario.
     """
 
     b_is_base_case = is_base
@@ -381,7 +381,7 @@ def _apply_randomization_for_scenario(
     l_dg_randomization_logs = []
 
     if not b_is_base_case and Config.ENABLE_LINE_RANDOMIZATION:
-        l_line_randomization_logs = apply_random_line_length_scenario(
+        l_line_randomization_logs = apply_random_line_parameter_scenario(
             d_original_line_states,
             s_scenario_id,
             i_line_random_seed,
@@ -446,6 +446,16 @@ def _build_scenario_metadata(
     i_line_random_seed = line_seed
     i_dg_random_seed = dg_seed
 
+    b_line_randomization_active = (
+        not b_is_base_case
+        and Config.ENABLE_LINE_RANDOMIZATION
+    )
+
+    b_dg_randomization_active = (
+        not b_is_base_case
+        and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+    )
+
     return {
         "switch_state_short_id": s_switch_state_short_id,
         "switch_state_config_id": s_switch_state_config_id,
@@ -455,30 +465,36 @@ def _build_scenario_metadata(
         "scenario_id": s_scenario_id,
         "scenario_uid": s_scenario_uid,
         "case_uid": s_scenario_uid,
-        "line_length_random_seed": i_line_random_seed,
+
+        "line_length_random_seed": (
+            i_line_random_seed
+            if b_line_randomization_active
+            else -1
+        ),
         "line_length_scale_min": (
             Config.LINE_LENGTH_SCALE_MIN
-            if not b_is_base_case and Config.ENABLE_LINE_RANDOMIZATION
+            if b_line_randomization_active
             else 1.0
         ),
         "line_length_scale_max": (
             Config.LINE_LENGTH_SCALE_MAX
-            if not b_is_base_case and Config.ENABLE_LINE_RANDOMIZATION
+            if b_line_randomization_active
             else 1.0
         ),
+
         "dg_capacity_random_seed": (
             i_dg_random_seed
-            if not b_is_base_case and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+            if b_dg_randomization_active
             else -1
         ),
         "dg_capacity_scale_min": (
             Config.DG_CAPACITY_SCALE_MIN
-            if not b_is_base_case and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+            if b_dg_randomization_active
             else 1.0
         ),
         "dg_capacity_scale_max": (
             Config.DG_CAPACITY_SCALE_MAX
-            if not b_is_base_case and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+            if b_dg_randomization_active
             else 1.0
         ),
     }
@@ -598,6 +614,16 @@ def _process_single_scenario(
     b_is_base_case = is_base
     s_scenario_id = scid
     s_scenario_uid = scenario_uid
+
+    b_line_randomization_active = (
+            not b_is_base_case
+            and Config.ENABLE_LINE_RANDOMIZATION
+    )
+
+    b_dg_randomization_active = (
+            not b_is_base_case
+            and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+    )
 
     l_switch_status_vector = sw_vec
     i_open_switch_count = open_switch_count
