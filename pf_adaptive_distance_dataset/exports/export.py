@@ -636,6 +636,12 @@ def stream_export_and_audit(
                 }
             )
 
+        if l_valid_flat_rows:
+            _write_flat_rows_csv(
+                p_flat_csv_path,
+                l_valid_flat_rows,
+            )
+
         if l_graph_rows:
             l_all_graph_rows.extend(l_graph_rows)
             l_all_ml_ready_graph_rows.extend(
