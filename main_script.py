@@ -57,6 +57,8 @@ def main():
     - merge generation-side invalid-case reasons into export statistics
     """
 
+    Config.get_random_seed_base()  # initialise seed once at run start before any parallel/threaded use
+
     df_switch_states, l_switch_columns = load_switch_state_dataframe()
 
     i_total_switch_state_count = len(df_switch_states)

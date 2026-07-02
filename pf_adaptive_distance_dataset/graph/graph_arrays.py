@@ -54,16 +54,25 @@ def collect_string_array(rows, col, default=""):
     ]
 
 
-def build_bus_index(rows):
+def build_bus_index(rows, bus_attributes=None):
     """
     Builds the graph bus index from relay and subsequent node IDs.
-    Returns:
-    - ordered bus ID list
-    - bus ID to index dictionary
-    - bus type list
+    Assigns bus_typ per terminal using the bus_attributes lookup from
+    capture_bus_attributes() in state_capture.py.
+
+    bus_typ codes:
+      0  Plain bus (load/tie)
+      1  Sync DG bus (ElmGenstat)
+      2  PV/inverter bus (ElmPvsys)
+      3  Mixed DG bus (both)
+      4  External grid / slack (ElmXnet)
+      5  Transformer HV bus
+      6  Transformer LV bus
+      7  Junction node (iUsage=1)
     """
 
     l_rows = rows
+    d_bus_attributes = bus_attributes or {}
 
     l_bus_ids = sorted(
         set(
@@ -80,10 +89,40 @@ def build_bus_index(rows):
         for i_bus_index, s_bus_id in enumerate(l_bus_ids)
     }
 
-    l_bus_type = [
-        0
-        for _s_bus_id in l_bus_ids
-    ]
+    l_bus_type = []
+
+    for s_bus_id in l_bus_ids:
+        d_attrs = d_bus_attributes.get(s_bus_id)
+
+        if d_attrs is None:
+            l_bus_type.append(0)
+            continue
+
+        i_usage    = d_attrs.get("iUsage", 0)
+        b_sync     = d_attrs.get("has_sync_dg", 0)
+        b_pv       = d_attrs.get("has_pv_dg", 0)
+        b_xnet     = d_attrs.get("has_xnet", 0)
+        b_tr_hv    = d_attrs.get("has_transformer_hv", 0)
+        b_tr_lv    = d_attrs.get("has_transformer_lv", 0)
+
+        if i_usage == 1:
+            i_typ = 7
+        elif b_xnet:
+            i_typ = 4
+        elif b_sync and b_pv:
+            i_typ = 3
+        elif b_sync:
+            i_typ = 1
+        elif b_pv:
+            i_typ = 2
+        elif b_tr_hv:
+            i_typ = 5
+        elif b_tr_lv:
+            i_typ = 6
+        else:
+            i_typ = 0
+
+        l_bus_type.append(i_typ)
 
     return l_bus_ids, d_bus_index_by_id, l_bus_type
 
@@ -270,7 +309,6 @@ def stamp_switched_ybus(phys_edges, n):
     l_lines_connected = [0] * i_physical_pair_count
     l_lines_connected_count = [0] * i_physical_pair_count
     l_y_lines = [complex(0, 0)] * i_physical_pair_count
-    l_y_c_lines = [0.0] * i_physical_pair_count
 
     l_y_matrix = [
         [
@@ -358,7 +396,6 @@ def stamp_switched_ybus(phys_edges, n):
         d_physical_edge_arrays["physical_edge_is_in_service"].append(1)
 
     return {
-        "Y_C_Lines": l_y_c_lines,
         "Lines_connected": l_lines_connected,
         "Lines_connected_count": l_lines_connected_count,
         "Y_Lines_real": [
@@ -399,7 +436,7 @@ def stamp_switched_ybus(phys_edges, n):
     }
 
 
-def convert_scenario_to_graph_row(rows, meta, switch_status):
+def convert_scenario_to_graph_row(rows, meta, switch_status, bus_attributes=None):
     """
     Converts all flat rows from one scenario into one graph-array row.
     """
@@ -412,7 +449,7 @@ def convert_scenario_to_graph_row(rows, meta, switch_status):
         l_bus_ids,
         d_bus_index_by_id,
         l_bus_type,
-    ) = build_bus_index(l_rows)
+    ) = build_bus_index(l_rows, bus_attributes)
 
     (
         d_directed_edge_data,

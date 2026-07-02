@@ -33,6 +33,8 @@ from .dg_utils import (
     get_unique_distributed_generators_from_terminals,
 )
 
+import logging
+
 
 def extract_network_once(grid, app):
     """
@@ -567,6 +569,17 @@ def find_parallel_protected_corridors(tcorr, all_corrs):
 def summarize_parallel_protected_corridors(tcorr, all_corrs):
     """
     Summarizes parallel protected corridors for a target corridor.
+
+    For triple-circuit (or higher) corridors, the exported impedance values
+    represent the equivalent parallel impedance across ALL parallel corridors,
+    computed as Z_eq = 1 / sum(1/Zi). This is the value seen by the relay
+    for an infeed via the parallel path and is more accurate than reporting
+    only the first parallel corridor.
+
+    Note: parallel_r_ohm / parallel_x_ohm / parallel_length_km are exported
+    as informational columns only. They do not feed into the Zone 2 reach
+    formula (which derives its parallel branch impedance independently via
+    select_zone2_downstream_branch_group).
     """
 
     d_target_corridor = tcorr
@@ -577,21 +590,64 @@ def summarize_parallel_protected_corridors(tcorr, all_corrs):
         l_all_corridors,
     )
 
-    d_first_parallel_corridor = (
-        l_parallel_corridors[0]
-        if l_parallel_corridors
-        else {}
+    if not l_parallel_corridors:
+        return {
+            "is_parallel": False,
+            "parallel_count": 1,
+            "parallel_alternative_lines": "",
+            "parallel_r_ohm": 0.0,
+            "parallel_x_ohm": 0.0,
+            "parallel_length_km": 0.0,
+        }
+
+    i_parallel_count = len(l_parallel_corridors)
+
+    if i_parallel_count > 1:
+        logging.getLogger(__name__).warning(
+            f"Triple-circuit (or higher) corridor detected: "
+            f"{i_parallel_count} parallel corridors found for "
+            f"'{get_branch_line_names(d_target_corridor.get('line_sections', []))}'. "
+            f"Exporting equivalent parallel impedance across all {i_parallel_count} parallels."
+        )
+
+    # Equivalent parallel impedance: Z_eq = 1 / sum(1/Zi)
+    # Use complex arithmetic to handle R and X together.
+    c_admittance_sum = complex(0.0, 0.0)
+    f_total_length_km = 0.0
+
+    for d_par_corridor in l_parallel_corridors:
+        f_r = float(d_par_corridor.get("total_r_ohm", 0.0))
+        f_x = float(d_par_corridor.get("total_x_ohm", 0.0))
+        f_total_length_km += float(d_par_corridor.get("total_length_km", 0.0))
+
+        c_impedance = complex(f_r, f_x)
+        if abs(c_impedance) > 1e-12:
+            c_admittance_sum += 1.0 / c_impedance
+
+    if abs(c_admittance_sum) > 1e-12:
+        c_z_eq = 1.0 / c_admittance_sum
+        f_parallel_r_ohm = round(c_z_eq.real, 6)
+        f_parallel_x_ohm = round(c_z_eq.imag, 6)
+    else:
+        f_parallel_r_ohm = 0.0
+        f_parallel_x_ohm = 0.0
+
+    # Average length across parallel corridors (informational only)
+    f_avg_length_km = round(f_total_length_km / i_parallel_count, 3)
+
+    # All parallel line names joined — not just the first
+    s_all_parallel_line_names = " | ".join(
+        get_branch_line_names(d_par.get("line_sections", []))
+        for d_par in l_parallel_corridors
     )
 
     return {
-        "is_parallel": len(l_parallel_corridors) > 0,
-        "parallel_count": len(l_parallel_corridors) + 1 if l_parallel_corridors else 1,
-        "parallel_alternative_lines": get_branch_line_names(
-            d_first_parallel_corridor.get("line_sections", [])
-        ),
-        "parallel_r_ohm": d_first_parallel_corridor.get("total_r_ohm", 0.0),
-        "parallel_x_ohm": d_first_parallel_corridor.get("total_x_ohm", 0.0),
-        "parallel_length_km": d_first_parallel_corridor.get("total_length_km", 0.0),
+        "is_parallel": True,
+        "parallel_count": i_parallel_count + 1,
+        "parallel_alternative_lines": s_all_parallel_line_names,
+        "parallel_r_ohm": f_parallel_r_ohm,
+        "parallel_x_ohm": f_parallel_x_ohm,
+        "parallel_length_km": f_avg_length_km,
     }
 
 

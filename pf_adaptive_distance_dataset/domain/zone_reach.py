@@ -206,6 +206,10 @@ def calculate_complex_zone2_reach(
 
     f_reach_grading_factor = Config.REACH_GF
 
+    # Z2 = GF * (Z_corr + ((Z_par + (1-GF)*Z_short) * GF * Z_short) / (Z_short + Z_par))
+    # Z_corr  = protected corridor impedance
+    # Z_short = selected (shortest) downstream branch
+    # Z_par   = parallel branch for the same remote busbar
     c_zone2_reach_impedance = f_reach_grading_factor * (
         c_corridor_impedance
         + (

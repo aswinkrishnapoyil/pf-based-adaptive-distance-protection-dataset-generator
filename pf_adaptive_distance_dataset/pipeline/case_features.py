@@ -56,7 +56,6 @@ def get_case_feature_dict_for_corridor(
     o_app,
     o_grid,
     d_corridor,
-    _d_network,
     l_all_corridors,
     i_case_index,
     cached_all_grid_dg=None,
@@ -255,6 +254,13 @@ def get_case_feature_dict_for_corridor(
         "protected_corridor_r_ohm": d_corridor.get("total_r_ohm", 0.0),
         "protected_corridor_x_ohm": d_corridor.get("total_x_ohm", 0.0),
         "corridor_hop_count": d_corridor.get("hop_count", 0),
+        # Always 1 by construction. get_line_is_available_for_topology() filters
+        # out-of-service and open-switched lines before corridors are built, so
+        # every corridor in l_protected_corridors is guaranteed in-service.
+        # Topology variation across switch states is captured at the scenario
+        # level (each scenario has its own graph with only active corridors),
+        # not as edge masking within a fixed graph. This column is therefore
+        # constant and is excluded from ML feature sets in ML_READY_* columns.
         "line_is_in_service": 1,
 
         "protected_corridor_is_parallel": get_boolean_value(
@@ -373,15 +379,8 @@ def get_case_feature_dict_for_corridor(
             "zone3_downstream_branch_id",
             "",
         ),
-        "longest_downstream_branch_hop_count": len(
-            [
-                s_line_id
-                for s_line_id in d_zone_reaches.get(
-                    "zone3_downstream_branch_id",
-                    "",
-                ).split(" | ")
-                if s_line_id.strip()
-            ]
+        "longest_downstream_branch_hop_count": int(
+            _d_zone3_branch.get("Hop Count", 0)
         ),
         "longest_downstream_branch_length_km": d_zone_reaches.get(
             "zone3_downstream_branch_length_km",
@@ -644,7 +643,6 @@ def get_corridor_scenario_rows(
             o_app,
             o_grid,
             d_corridor,
-            d_network,
             l_protected_corridors,
             i_case_index,
             cached_all_grid_dg=l_cached_all_grid_dg,

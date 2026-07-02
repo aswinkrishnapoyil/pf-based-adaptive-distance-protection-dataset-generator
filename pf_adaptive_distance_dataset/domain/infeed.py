@@ -470,6 +470,12 @@ def select_fault_location_by_reach_impedance(
     segment where the target X lies.
     The R reach value is accepted as an argument for interface completeness, but
     the current selection logic uses X as the primary reach coordinate.
+    Assumption: this is valid for high-voltage grids (≥110 kV) where the R/X
+    ratio of lines is typically small (< 0.3). For resistive distribution or
+    sub-transmission grids with high R/X, the fault point may be placed slightly
+    beyond the true zone boundary in the R dimension, causing a small positive
+    bias in the in-feed correction. Extend to complex impedance magnitude if
+    the dataset is later extended to MV grids.
 
     Returns:
         tuple:
@@ -786,18 +792,6 @@ def get_object_id_string(l_objects):
             if o_object is not None
         ]
     )
-
-
-def get_dg_summary_id(d_dg_summary):
-    """
-    Extracts the readable DG name string from a DG summary dictionary.
-    The function expects the summary dictionary to contain a 'names' field.
-
-    Returns:
-        str:
-            DG name string from the summary, or an empty string if unavailable.
-    """
-    return d_dg_summary.get("names", "")
 
 
 def get_branch_junction_node_id(d_branch):

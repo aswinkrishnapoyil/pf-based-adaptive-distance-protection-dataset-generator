@@ -108,7 +108,8 @@ def get_cubicle_switch_closed_state(cubicle):
 
             return 1 if i_switch_state == 1 else 0
 
-    except:
+
+    except Exception:
         pass
 
     return 1
@@ -128,11 +129,11 @@ def get_line_is_available_for_topology(line):
     ) = get_line_terminals(o_line)
 
     b_cubicle_1_switch_closed = (
-        get_cubicle_switch_closed_state(o_cubicle_1) == 1
+            get_cubicle_switch_closed_state(o_cubicle_1) == 1
     )
 
     b_cubicle_2_switch_closed = (
-        get_cubicle_switch_closed_state(o_cubicle_2) == 1
+            get_cubicle_switch_closed_state(o_cubicle_2) == 1
     )
 
     return b_cubicle_1_switch_closed and b_cubicle_2_switch_closed
@@ -170,7 +171,8 @@ def get_terminal_connected_elements(terminal):
     try:
         return list(o_terminal.GetConnectedElements())
 
-    except:
+
+    except Exception:
         return []
 
 
@@ -183,23 +185,8 @@ def get_terminal_connected_lines(terminal):
         o_element
         for o_element in l_connected_elements
         if (
-            get_safe_class_name(o_element) == "ElmLne"
-            and get_line_is_available_for_topology(o_element)
-        )
-    ]
-
-
-def get_terminal_connected_loads(terminal):
-    o_terminal = terminal
-
-    l_connected_elements = get_terminal_connected_elements(o_terminal)
-
-    return [
-        o_element
-        for o_element in l_connected_elements
-        if (
-            get_safe_class_name(o_element) in ["ElmLod", "ElmLodlv"]
-            and is_object_in_service(o_element)
+                get_safe_class_name(o_element) == "ElmLne"
+                and get_line_is_available_for_topology(o_element)
         )
     ]
 
@@ -213,8 +200,8 @@ def get_terminal_connected_distributed_generators(terminal):
         o_element
         for o_element in l_connected_elements
         if (
-            get_safe_class_name(o_element) in ["ElmGenstat", "ElmPvsys"]
-            and is_object_in_service(o_element)
+                get_safe_class_name(o_element) in ["ElmGenstat", "ElmPvsys"]
+                and is_object_in_service(o_element)
         )
     ]
 
@@ -223,8 +210,8 @@ def get_object_is_relay(obj):
     o_object = obj
 
     s_class_name_and_object_name = (
-        get_safe_class_name(o_object).lower()
-        + get_safe_name(o_object).lower()
+            get_safe_class_name(o_object).lower()
+            + get_safe_name(o_object).lower()
     )
 
     l_relay_name_markers = [
@@ -275,7 +262,8 @@ def get_relay_id_from_terminal_and_line(terminal, line):
         try:
             l_cubicle_contents = o_cubicle.GetContents("*", 1)
 
-        except:
+
+        except Exception:
             l_cubicle_contents = []
 
         l_relays = [
@@ -340,12 +328,12 @@ def get_parallel_lines_for_line(line):
         o_candidate_line
         for o_candidate_line in get_terminal_connected_lines(o_terminal_1)
         if (
-            o_candidate_line != o_line
-            and line_connects_terminal_pair(
-                o_candidate_line,
-                s_terminal_1_full_name,
-                s_terminal_2_full_name,
-            )
+                o_candidate_line != o_line
+                and line_connects_terminal_pair(
+            o_candidate_line,
+            s_terminal_1_full_name,
+            s_terminal_2_full_name,
+        )
         )
     ]
 

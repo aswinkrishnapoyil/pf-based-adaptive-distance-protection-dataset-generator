@@ -312,9 +312,7 @@ def _get_scenario_seeds(
         return -1, -1
 
     i_line_random_seed = (
-        Config.get_random_seed_base()
-        + (i_randomized_scenario_index + 1)
-        + i_global_row_index * Config.RANDOMIZED_SCENARIO_COUNT
+            abs(hash((Config.get_random_seed_base(), i_global_row_index, i_randomized_scenario_index))) % (2 ** 31)
     )
 
     i_dg_random_seed = (
@@ -505,6 +503,7 @@ def _append_payloads_for_scenario(
     grid,
     app,
     cached_all_grid_dg: list,
+    bus_attrs: dict,
     scenario_uid: str,
     meta: dict,
     sw_vec: list[int],
@@ -521,6 +520,7 @@ def _append_payloads_for_scenario(
     o_app = app
 
     l_cached_all_grid_dg = cached_all_grid_dg
+    d_bus_attributes = bus_attrs
     s_scenario_uid = scenario_uid
     d_scenario_metadata = meta
     l_switch_status_vector = sw_vec
@@ -563,7 +563,17 @@ def _append_payloads_for_scenario(
         l_corridor_rows,
         d_scenario_metadata,
         l_switch_status_vector,
+        bus_attributes=d_bus_attributes,
     )
+
+    # Embed the per-scenario case IDs so each directed edge can be
+    # joined back to its flat CSV row using:
+    #   scenario_uid  (already in graph metadata)  +  scenario_case_id
+    # Do NOT use the global case_id for this — it is reassigned in export.
+    d_graph_row["directed_edge_scenario_case_ids"] = [
+        int(d_row.get("case_id", i + 1))
+        for i, d_row in enumerate(l_corridor_rows)
+    ]
 
     l_scenario_payloads.append(
         ExportPayload(
@@ -595,6 +605,7 @@ def _process_single_scenario(
     orig_sw: dict,
     out_objs: list,
     cached_all_grid_dg: list,
+    bus_attrs: dict,
     scenario_yields: list[ExportPayload],
 ) -> None:
     """
@@ -615,16 +626,6 @@ def _process_single_scenario(
     s_scenario_id = scid
     s_scenario_uid = scenario_uid
 
-    b_line_randomization_active = (
-            not b_is_base_case
-            and Config.ENABLE_LINE_RANDOMIZATION
-    )
-
-    b_dg_randomization_active = (
-            not b_is_base_case
-            and Config.ENABLE_DG_CAPACITY_RANDOMIZATION
-    )
-
     l_switch_status_vector = sw_vec
     i_open_switch_count = open_switch_count
     i_closed_switch_count = closed_switch_count
@@ -636,6 +637,7 @@ def _process_single_scenario(
     d_original_switch_states = orig_sw
     l_outserv_controlled_objects = out_objs
     l_cached_all_grid_dg = cached_all_grid_dg
+    d_bus_attributes = bus_attrs
     l_scenario_payloads = scenario_yields
 
     _restore_and_apply_switch_state(
@@ -687,6 +689,7 @@ def _process_single_scenario(
         grid=o_grid,
         app=o_app,
         cached_all_grid_dg=l_cached_all_grid_dg,
+        bus_attrs=d_bus_attributes,
         scenario_uid=s_scenario_uid,
         meta=d_scenario_metadata,
         sw_vec=l_switch_status_vector,
@@ -871,6 +874,7 @@ def generate_dataset_cases(
                     d_original_switch_states,
                     l_outserv_controlled_objects,
                     l_cached_all_grid_dg,
+                    d_bus_attributes,
                 ) = capture_original_state_from_active_slave(
                     o_grid,
                     o_app,
@@ -910,6 +914,7 @@ def generate_dataset_cases(
                             orig_sw=d_original_switch_states,
                             out_objs=l_outserv_controlled_objects,
                             cached_all_grid_dg=l_cached_all_grid_dg,
+                            bus_attrs=d_bus_attributes,
                             scenario_yields=l_scenario_payloads,
                         )
 

@@ -24,6 +24,84 @@ from ..pipeline.switch_states import (
 )
 
 
+def capture_bus_attributes(app, grid):
+    """
+    Builds a lookup of bus-level attributes for all terminals inside the grid.
+    Called once per slave case, while PowerFactory objects are live.
+    Returns: dict  loc_name -> attribute dict
+    """
+    from .pf_utils import get_safe_name, is_object_in_service
+
+    d_bus_attributes = {}
+
+    for o_terminal in app.GetCalcRelevantObjects("*.ElmTerm") or []:
+        if not is_object_inside_grid(o_terminal, grid):
+            continue
+
+        s_name = get_safe_name(o_terminal)
+        i_usage = get_pf_attribute(o_terminal, "iUsage", 0, int)
+        f_uknom = get_pf_attribute(o_terminal, "uknom", 0.0, float)
+
+        d_bus_attributes[s_name] = {
+            "iUsage": i_usage,
+            "uknom_kv": round(f_uknom, 3),
+            "has_sync_dg": 0,
+            "has_pv_dg": 0,
+            "has_xnet": 0,
+            "has_transformer_hv": 0,
+            "has_transformer_lv": 0,
+            "dg_capacity_mva": 0.0,
+        }
+
+    for o_dg in app.GetCalcRelevantObjects("*.ElmGenstat") or []:
+        if not is_object_in_service(o_dg):
+            continue
+        o_cub = get_pf_attribute(o_dg, PFAttr.BUS1)
+        s_key = get_safe_name(get_terminal_from_cubicle(o_cub))
+        if s_key in d_bus_attributes:
+            d_bus_attributes[s_key]["has_sync_dg"] = 1
+            for s_attr in PFAttr.DG_CAPACITY_CANDIDATES:
+                f_cap = get_pf_attribute(o_dg, s_attr, None, float)
+                if f_cap is not None:
+                    d_bus_attributes[s_key]["dg_capacity_mva"] += f_cap
+                    break
+
+    for o_dg in app.GetCalcRelevantObjects("*.ElmPvsys") or []:
+        if not is_object_in_service(o_dg):
+            continue
+        o_cub = get_pf_attribute(o_dg, PFAttr.BUS1)
+        s_key = get_safe_name(get_terminal_from_cubicle(o_cub))
+        if s_key in d_bus_attributes:
+            d_bus_attributes[s_key]["has_pv_dg"] = 1
+            for s_attr in PFAttr.DG_CAPACITY_CANDIDATES:
+                f_cap = get_pf_attribute(o_dg, s_attr, None, float)
+                if f_cap is not None:
+                    d_bus_attributes[s_key]["dg_capacity_mva"] += f_cap
+                    break
+
+    for o_xnet in app.GetCalcRelevantObjects("*.ElmXnet") or []:
+        if not is_object_in_service(o_xnet):
+            continue
+        o_cub = get_pf_attribute(o_xnet, PFAttr.BUS1)
+        s_key = get_safe_name(get_terminal_from_cubicle(o_cub))
+        if s_key in d_bus_attributes:
+            d_bus_attributes[s_key]["has_xnet"] = 1
+
+    for o_tr in app.GetCalcRelevantObjects("*.ElmTr2") or []:
+        if not is_object_in_service(o_tr):
+            continue
+        o_hv_cub = get_pf_attribute(o_tr, PFAttr.BUSHV)
+        o_lv_cub = get_pf_attribute(o_tr, PFAttr.BUSLV)
+        s_hv = get_safe_name(get_terminal_from_cubicle(o_hv_cub))
+        s_lv = get_safe_name(get_terminal_from_cubicle(o_lv_cub))
+        if s_hv in d_bus_attributes:
+            d_bus_attributes[s_hv]["has_transformer_hv"] = 1
+        if s_lv in d_bus_attributes:
+            d_bus_attributes[s_lv]["has_transformer_lv"] = 1
+
+    return d_bus_attributes
+
+
 def capture_original_state_from_active_slave(grid, app):
     """
     Capture original line, DG, switch, and outserv states
@@ -167,6 +245,8 @@ def capture_original_state_from_active_slave(grid, app):
 
     l_cached_all_grid_dg = l_distributed_generators
 
+    d_bus_attributes = capture_bus_attributes(o_app, o_grid)
+
     return (
         d_cubicle_lookup,
         d_original_line_states,
@@ -175,4 +255,5 @@ def capture_original_state_from_active_slave(grid, app):
         d_original_switch_states,
         l_outserv_controlled_objects,
         l_cached_all_grid_dg,
+        d_bus_attributes,
     )

@@ -74,7 +74,6 @@ ML_READY_DIRECTED_EDGE_FEATURE_COLUMNS = [
     "directed_edge_count",
     "directed_edge_from_index",
     "directed_edge_to_index",
-    "directed_edge_line_is_in_service",
     "directed_edge_length_km",
     "directed_edge_r_ohm",
     "directed_edge_x_ohm",
@@ -120,10 +119,14 @@ ML_READY_DG_CONTEXT_FEATURE_COLUMNS = [
     "zone1_turbines_considered_count",
     "zone1_turbines_skipped_count",
     "zone1_turbines_total_capacity_mva",
+    "zone1_total_ikss_contribution_ratio",
+    "zone1_max_single_ikss_contribution_ratio",
     "zone2_turbines_candidate_count",
     "zone2_turbines_considered_count",
     "zone2_turbines_skipped_count",
     "zone2_turbines_total_capacity_mva",
+    "zone2_total_ikss_contribution_ratio",
+    "zone2_max_single_ikss_contribution_ratio",
 ]
 
 ML_READY_TARGET_MASK_COLUMNS = [
@@ -188,12 +191,8 @@ def _json_default(obj):
 
     o_object = obj
 
-    try:
-        if isinstance(o_object, Path):
-            return str(o_object)
-
-    except Exception:
-        pass
+    if isinstance(o_object, Path):
+        return str(o_object)
 
     try:
         return o_object.item()
@@ -252,6 +251,14 @@ def _write_dict_rows_csv(path: Path, rows: list[dict]) -> None:
     b_file_exists = _csv_has_content(p_csv_path)
     l_existing_header = _read_csv_header(p_csv_path)
 
+    if b_file_exists and l_existing_header and l_existing_header != l_fieldnames:
+        raise RuntimeError(
+            f"CSV field mismatch in '{p_csv_path.name}'. "
+            f"Cannot append: existing header has {len(l_existing_header)} columns, "
+            f"new batch has {len(l_fieldnames)} columns. "
+            f"Delete the file or start a new output directory."
+        )
+
     with p_csv_path.open("a", newline="", encoding="utf-8") as o_file:
         o_csv_writer = csv.DictWriter(
             o_file,
@@ -259,7 +266,7 @@ def _write_dict_rows_csv(path: Path, rows: list[dict]) -> None:
             extrasaction="ignore",
         )
 
-        if not b_file_exists or l_existing_header != l_fieldnames:
+        if not b_file_exists:
             o_csv_writer.writeheader()
 
         for d_row in l_rows:
@@ -382,31 +389,6 @@ def _normalise_ml_ready_graph_row(row: dict) -> dict:
         s_column: d_row.get(s_column, None)
         for s_column in ML_READY_GRAPH_COLUMNS
     }
-
-
-def _write_ml_ready_graph_rows_parquet(
-        path: Path,
-        graph_rows: list[dict],
-) -> None:
-    """
-    Appends ML-ready graph-array scenario rows to a Parquet file.
-    """
-
-    p_ml_ready_parquet_path = path
-    l_graph_rows = graph_rows
-
-    if not l_graph_rows:
-        return
-
-    l_ml_ready_rows = [
-        _normalise_ml_ready_graph_row(d_row)
-        for d_row in l_graph_rows
-    ]
-
-    _write_graph_rows_parquet(
-        p_ml_ready_parquet_path,
-        l_ml_ready_rows,
-    )
 
 
 def _append_audit_rows(
@@ -582,6 +564,8 @@ def stream_export_and_audit(
 
     l_valid_rows_for_statistics: list[dict] = []
     l_audit_rows: list[dict] = []
+    l_all_graph_rows: list[dict] = []
+    l_all_ml_ready_graph_rows: list[dict] = []
 
     l_numeric_columns = (
         base_reach_columns
@@ -652,22 +636,22 @@ def stream_export_and_audit(
                 }
             )
 
-        if l_valid_flat_rows:
-            _write_flat_rows_csv(
-                p_flat_csv_path,
-                l_valid_flat_rows,
-            )
-
         if l_graph_rows:
-            _write_graph_rows_parquet(
-                p_graph_parquet_path,
-                l_graph_rows,
+            l_all_graph_rows.extend(l_graph_rows)
+            l_all_ml_ready_graph_rows.extend(
+                [_normalise_ml_ready_graph_row(d_row) for d_row in l_graph_rows]
             )
 
-            _write_ml_ready_graph_rows_parquet(
-                p_ml_ready_graph_parquet_path,
-                l_graph_rows,
-            )
+            # Checkpoint flush every 50 scenarios for crash recovery
+            if len(l_all_graph_rows) % 50 == 0:
+                _write_graph_rows_parquet(
+                    p_graph_parquet_path,
+                    l_all_graph_rows,
+                )
+                _write_graph_rows_parquet(
+                    p_ml_ready_graph_parquet_path,
+                    l_all_ml_ready_graph_rows,
+                )
 
         if o_payload.line_logs:
             _write_dict_rows_csv(
@@ -680,6 +664,18 @@ def stream_export_and_audit(
                 p_dg_log_csv_path,
                 o_payload.dg_logs,
             )
+
+    if l_all_graph_rows:
+        _write_graph_rows_parquet(
+            p_graph_parquet_path,
+            l_all_graph_rows,
+        )
+
+    if l_all_ml_ready_graph_rows:
+        _write_graph_rows_parquet(
+            p_ml_ready_graph_parquet_path,
+            l_all_ml_ready_graph_rows,
+        )
 
     if l_audit_rows:
         _append_audit_rows(
