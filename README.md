@@ -1,8 +1,8 @@
 ﻿# PF-Based Adaptive Distance Protection Dataset Generator
 
-Generates structured datasets for training machine learning models (MLP and GNN) to predict adaptive distance-protection zone reach parameters in sub-transmission grids with distributed generation (DG).
+Generates structured datasets for training machine learning to predict adaptive distance-protection zone reach parameters in sub-transmission grids with distributed generation (DG).
 
-The pipeline connects to a live **DIgSILENT PowerFactory** session, iterates over switch-state topology configurations and randomised line/DG scenarios, runs short-circuit calculations per DG turbine to compute infeed corrections, and exports flat CSV rows plus graph-array Parquet files ready for ML training.
+The pipeline connects to a live **DIgSILENT PowerFactory** session, iterates over switch-state topology configurations and randomized line/DG scenarios, runs short-circuit calculations per DG turbine to compute in-feed corrections, and exports flat CSV rows plus graph-array Parquet files ready for ML training.
 
 ---
 
@@ -57,7 +57,7 @@ pip install -r requirements.txt
 
 Required packages: `pandas`, `openpyxl`, `pyarrow`
 
-PowerFactory must be installed separately. The pipeline uses its built-in Python API — no additional installation is needed beyond pointing `PF_PYTHON_PATH` at the correct folder (see Configuration below).
+PowerFactory must be installed separately. The pipeline uses its built in Python API. No additional installation is needed beyond pointing `PF_PYTHON_PATH` at the correct folder (see Configuration below).
 
 ### Main Entry Point
 
@@ -67,24 +67,24 @@ python main_script.py
 
 The script performs the full workflow:
 
-1. Initialises the random seed
-2. Loads switch-state configurations from CSV
-3. Opens a PowerFactory session and activates the configured project
-4. For each switch-state row, creates a slave study-case / operation-scenario pair
-5. Captures original grid state and bus-type attributes (terminal classifications)
+1. Initializes the random seed.
+2. Loads switch-state configurations from CSV.
+3. Opens a PowerFactory session and activates the configured project.
+4. For each switch-state row, creates a slave study-case / operation-scenario pair.
+5. Captures original grid state and bus-type attributes (terminal classifications).
 6. For each scenario (base + randomised):
-   - Applies the switch state and randomised line/DG parameters
-   - Extracts flat corridor-level feature rows (Zone 1/2/3 reach + infeed corrections)
-   - Builds a graph-array row (Y-bus, directed edges, node types, switch status)
-   - Streams payloads to disk
-7. Deletes each slave pair after processing
-8. Writes final Parquet, audit Excel, metadata JSON, and statistics JSON
+   - Applies the switch state and randomized line/DG parameters.
+   - Extracts flat corridor-level feature rows (Zone 1/2/3 reach + in-feed corrections).
+   - Builds a graph-array row (Y-bus, directed edges, node types, switch status).
+   - Streams payloads to disk.
+7. Deletes each slave pair after processing.
+8. Writes final Parquet, audit Excel, metadata JSON, and statistics JSON.
 
 ---
 
 ## Configuration
 
-All user-configurable settings live in `pf_adaptive_distance_dataset/core/config.py`.
+All user configurable settings live in `pf_adaptive_distance_dataset/core/config.py`.
 
 ### PowerFactory Connection
 
@@ -97,7 +97,7 @@ MASTER_STUDY_CASE_NAME          = "SC_Master"
 MASTER_OPERATION_SCENARIO_NAME  = "OS_Master"
 ```
 
-Update these to match your local PowerFactory installation and project structure before running.
+Update these to match the local PowerFactory installation and project structure before running.
 
 ### Zone Reach Settings
 
@@ -110,10 +110,10 @@ ZONE3_REACH_FACTOR   = 1.20   # multiplier on downstream branch impedance for Zo
 
 ```python
 ENABLE_SWITCH_STATE_SCENARIOS   = True
-MAX_SWITCH_STATE_CONFIG_COUNT   = None   # None = all rows; set e.g. 2 for a quick test run
+MAX_SWITCH_STATE_CONFIG_COUNT   = None   # None = all rows. Set e.g. 2 for a quick test run
 
 INCLUDE_ORIGINAL_BASE_CASE      = True
-RANDOMIZED_SCENARIO_COUNT       = 2      # randomised scenarios per switch state
+RANDOMIZED_SCENARIO_COUNT       = 2      # randomized scenarios per switch state
 ```
 
 Example with defaults:
@@ -127,11 +127,11 @@ LINE_LENGTH_SCALE_MIN          = 0.8    # scale line dline attribute down to 80 
 LINE_LENGTH_SCALE_MAX          = 1.2    # scale line dline attribute up to 120 %
 
 ENABLE_DG_CAPACITY_RANDOMIZATION = True
-DG_CAPACITY_SCALE_MIN          = 0.8
-DG_CAPACITY_SCALE_MAX          = 1.2
+DG_CAPACITY_SCALE_MIN          = 0.8    # scale installed DG capacity (sgn/Sn) down to 80 %
+DG_CAPACITY_SCALE_MAX          = 1.2    # scale installed DG capacity (sgn/Sn) up to 120 %
 ```
 
-Line randomisation varies the `dline` attribute only; PowerFactory recomputes R1/X1 from the shared line type, preserving the per-unit impedance of the original model.
+Line randomization varies the `dline` attribute only. PowerFactory recomputes R1/X1 from the shared line type, preserving the per-unit impedance of the original model.
 
 ### Reproducibility
 
