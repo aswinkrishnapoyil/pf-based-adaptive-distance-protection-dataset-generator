@@ -46,10 +46,17 @@ ML_READY_AUDIT_COLUMNS = [
 ]
 
 ML_READY_GLOBAL_GRAPH_FEATURE_COLUMNS = [
+    # Switch topology
     "switch_count",
     "switch_status",
+    # Bus / node features
     "bus_number",
-    "bus_typ",
+    "bus_typ",          # 0-7 classification (plain/DG/xnet/junction/transformer)
+    "bus_uknom_kv",     # nominal voltage per bus
+    "bus_has_dg",       # binary: any DG connected to this bus
+    "bus_dg_capacity_mva",  # total DG capacity on this bus
+    "bus_has_xnet",     # binary: external grid (slack) on this bus
+    # Y-bus / admittance matrix
     "Lines_connected",
     "Lines_connected_count",
     "Y_Lines_real",
@@ -74,12 +81,16 @@ ML_READY_DIRECTED_EDGE_FEATURE_COLUMNS = [
     "directed_edge_count",
     "directed_edge_from_index",
     "directed_edge_to_index",
+    # directed_edge_line_is_in_service excluded: always 1 by construction
     "directed_edge_length_km",
     "directed_edge_r_ohm",
     "directed_edge_x_ohm",
     "directed_edge_hop_count",
     "directed_edge_is_parallel",
     "directed_edge_parallel_count",
+    # Join key: links each directed edge back to its flat CSV row via
+    # scenario_uid (in audit columns) + directed_edge_scenario_case_ids[i]
+    "directed_edge_scenario_case_ids",
 ]
 
 ML_READY_TOPOLOGY_CONTEXT_FEATURE_COLUMNS = [
@@ -105,25 +116,19 @@ ML_READY_TOPOLOGY_CONTEXT_FEATURE_COLUMNS = [
 ]
 
 ML_READY_DG_CONTEXT_FEATURE_COLUMNS = [
-    "relay_busbar_distributed_generation_count",
+    # DG capacity per location — counts dropped (capacity already encodes presence)
     "relay_busbar_distributed_generation_capacity_mva",
-    "protected_corridor_distributed_generation_count",
     "protected_corridor_distributed_generation_capacity_mva",
-    "subsequent_busbar_distributed_generation_count",
     "subsequent_busbar_distributed_generation_capacity_mva",
-    "downstream_branch_distributed_generation_count",
     "downstream_branch_distributed_generation_capacity_mva",
-    "remote_busbar_distributed_generation_count",
     "remote_busbar_distributed_generation_capacity_mva",
-    "zone1_turbines_candidate_count",
+    # Zone 1 turbine summary — candidate/skipped dropped (pipeline diagnostics, not grid features)
     "zone1_turbines_considered_count",
-    "zone1_turbines_skipped_count",
     "zone1_turbines_total_capacity_mva",
     "zone1_total_ikss_contribution_ratio",
     "zone1_max_single_ikss_contribution_ratio",
-    "zone2_turbines_candidate_count",
+    # Zone 2 turbine summary
     "zone2_turbines_considered_count",
-    "zone2_turbines_skipped_count",
     "zone2_turbines_total_capacity_mva",
     "zone2_total_ikss_contribution_ratio",
     "zone2_max_single_ikss_contribution_ratio",
