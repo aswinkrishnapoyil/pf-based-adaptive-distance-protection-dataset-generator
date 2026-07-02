@@ -508,15 +508,18 @@ def protected_corridors_have_same_busbar_pair(ca, cb):
     ):
         return False
 
-    s_busbar_pair_a = {
+    # Use an ordered tuple so that A→B and B→A are treated as different pairs.
+    # A parallel corridor must protect the same line direction (same relay busbar,
+    # same subsequent busbar), not just the same pair of busbars.
+    s_busbar_pair_a = (
         get_safe_full_name(d_corridor_a.get("relay_busbar")),
         get_safe_full_name(d_corridor_a.get("subsequent_busbar")),
-    }
+    )
 
-    s_busbar_pair_b = {
+    s_busbar_pair_b = (
         get_safe_full_name(d_corridor_b.get("relay_busbar")),
         get_safe_full_name(d_corridor_b.get("subsequent_busbar")),
-    }
+    )
 
     return s_busbar_pair_a == s_busbar_pair_b
 
