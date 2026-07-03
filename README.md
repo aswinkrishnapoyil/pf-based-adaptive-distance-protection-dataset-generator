@@ -3,7 +3,6 @@
 Generates structured datasets for training machine learning to predict adaptive distance-protection zone reach parameters in sub-transmission grids with distributed generation (DG).
 
 The pipeline connects to a live **DIgSILENT PowerFactory** session, iterates over switch-state topology configurations and randomized line/DG scenarios, runs short-circuit calculations per DG turbine to compute in-feed corrections, and exports flat CSV rows plus graph-array Parquet files ready for ML training.
-
 ---
 
 ## Repository Structure
@@ -15,6 +14,11 @@ pf-based-adaptive-distance-protection-dataset-generator/
 ├── requirements.txt
 ├── .gitignore
 ├── inspect_grid_bus_types.py             ← standalone diagnostic: maps terminals to bus_typ codes
+├── generate_switch_states.py             ← automated switch-state generator (no GUI needed)
+├── create_manual_switch_state_library.py ← manual switch-state recorder via PowerFactory GUI
+├── view_parquet.py                       ← diagnostic viewer for generated Parquet files
+├── switch_state/
+│   └── switch_states.csv                ← canonical switch-state library (93 states, version-controlled)
 └── pf_adaptive_distance_dataset/
     ├── core/
     │   ├── config.py                     ← all user-configurable settings
@@ -57,7 +61,7 @@ pip install -r requirements.txt
 
 Required packages: `pandas`, `openpyxl`, `pyarrow`
 
-PowerFactory must be installed separately. The pipeline uses its built in Python API. No additional installation is needed beyond pointing `PF_PYTHON_PATH` at the correct folder (see Configuration below).
+PowerFactory must be installed separately. The pipeline uses its built-in Python API — no additional installation is needed beyond pointing `PF_PYTHON_PATH` at the correct folder (see Configuration below).
 
 ### Main Entry Point
 
@@ -67,24 +71,24 @@ python main_script.py
 
 The script performs the full workflow:
 
-1. Initializes the random seed.
-2. Loads switch-state configurations from CSV.
-3. Opens a PowerFactory session and activates the configured project.
-4. For each switch-state row, creates a slave study-case / operation-scenario pair.
-5. Captures original grid state and bus-type attributes (terminal classifications).
+1. Initialises the random seed
+2. Loads switch-state configurations from `switch_state/switch_states.csv`
+3. Opens a PowerFactory session and activates the configured project
+4. For each switch-state row, creates a slave study-case / operation-scenario pair
+5. Captures original grid state and bus-type attributes (terminal classifications)
 6. For each scenario (base + randomised):
-   - Applies the switch state and randomized line/DG parameters.
-   - Extracts flat corridor-level feature rows (Zone 1/2/3 reach + in-feed corrections).
-   - Builds a graph-array row (Y-bus, directed edges, node types, switch status).
-   - Streams payloads to disk.
-7. Deletes each slave pair after processing.
-8. Writes final Parquet, audit Excel, metadata JSON, and statistics JSON.
+   - Applies the switch state and randomised line/DG parameters
+   - Extracts flat corridor-level feature rows (Zone 1/2/3 reach + infeed corrections)
+   - Builds a graph-array row (Y-bus, directed edges, node types, switch status)
+   - Streams payloads to disk
+7. Deletes each slave pair after processing
+8. Writes final Parquet, audit Excel, metadata JSON, and statistics JSON
 
 ---
 
 ## Configuration
 
-All user configurable settings live in `pf_adaptive_distance_dataset/core/config.py`.
+All user-configurable settings live in `pf_adaptive_distance_dataset/core/config.py`.
 
 ### PowerFactory Connection
 
@@ -97,7 +101,7 @@ MASTER_STUDY_CASE_NAME          = "SC_Master"
 MASTER_OPERATION_SCENARIO_NAME  = "OS_Master"
 ```
 
-Update these to match the local PowerFactory installation and project structure before running.
+Update these to match your local PowerFactory installation and project structure before running.
 
 ### Zone Reach Settings
 
@@ -110,14 +114,14 @@ ZONE3_REACH_FACTOR   = 1.20   # multiplier on downstream branch impedance for Zo
 
 ```python
 ENABLE_SWITCH_STATE_SCENARIOS   = True
-MAX_SWITCH_STATE_CONFIG_COUNT   = None   # None = all rows. Set e.g. 2 for a quick test run
+MAX_SWITCH_STATE_CONFIG_COUNT   = None   # None = all rows; set e.g. 2 for a quick test run
 
 INCLUDE_ORIGINAL_BASE_CASE      = True
-RANDOMIZED_SCENARIO_COUNT       = 2      # randomized scenarios per switch state
+RANDOMIZED_SCENARIO_COUNT       = 2      # randomised scenarios per switch state
 ```
 
-Example with defaults:
-`30 switch states × (1 base + 2 randomised) = 90 scenario runs`
+Example with defaults and 93 switch states:
+`93 switch states × (1 base + 2 randomised) = 279 scenario runs ≈ 4,500 flat rows`
 
 ### Randomisation Controls
 
@@ -131,7 +135,7 @@ DG_CAPACITY_SCALE_MIN          = 0.8    # scale installed DG capacity (sgn/Sn) d
 DG_CAPACITY_SCALE_MAX          = 1.2    # scale installed DG capacity (sgn/Sn) up to 120 %
 ```
 
-Line randomization varies the `dline` attribute only. PowerFactory recomputes R1/X1 from the shared line type, preserving the per-unit impedance of the original model.
+Line randomisation varies the `dline` attribute only. PowerFactory recomputes R1/X1 from the shared line type, preserving the per-unit impedance of the original model.
 
 ### Reproducibility
 
@@ -154,8 +158,16 @@ The seed used in each run is logged and stored in the metadata JSON so any run c
 ### Switch-State Input
 
 ```text
-Results/Switch State/Switch_state.csv
+switch_state/switch_states.csv
 ```
+
+The canonical switch state library is version controlled at `switch_state/switch_states.csv`. It contains **93 switch states** covering:
+
+- All 8 single-line outages
+- All 28 double-line outage combinations
+- 6 triple-line outages (extreme topology reductions)
+- 24 states combining line outages with DG outages
+- Individual DG-only states for all 13 DG/feeder switches
 
 Each row is one topology configuration. Columns named `switch_<CIM-RDF-ID>` contain `0` (open) or `1` (closed) for each switchable cubicle in the grid.
 
@@ -163,4 +175,3 @@ Each row is one topology configuration. Columns named `switch_<CIM-RDF-ID>` cont
 
 All outputs are written to `Results/` with a timestamp suffix.
 
----
