@@ -114,6 +114,11 @@ turbine_numeric_columns = [
     "zone2_turbines_skipped_count", "zone2_turbines_total_capacity_mva",
 ]
 
+ikss_ratio_columns = [
+    "zone1_total_ikss_contribution_ratio", "zone1_max_single_ikss_contribution_ratio",
+    "zone2_total_ikss_contribution_ratio", "zone2_max_single_ikss_contribution_ratio",
+]
+
 turbine_string_columns = [
     "zone1_turbines_candidate_id", "zone1_turbines_considered_id",
     "zone1_turbines_skipped_id", "zone2_turbines_candidate_id",
@@ -121,9 +126,13 @@ turbine_string_columns = [
 ]
 
 directed_numeric_context_columns = (downstream_numeric_columns + zone_method_numeric_columns + dg_numeric_columns +
-                                    turbine_numeric_columns)
+                                    turbine_numeric_columns + ikss_ratio_columns)
 
 directed_string_context_columns = (downstream_string_columns + zone_method_string_columns + dg_string_columns +
                                    turbine_string_columns)
 
 ybus_2d_columns = ["Y_matrix_real_2d", "Y_matrix_imag_2d"]
+
+graph_edge_join_columns = [
+    "directed_edge_scenario_case_ids",
+]

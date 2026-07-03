@@ -124,7 +124,27 @@ def build_bus_index(rows, bus_attributes=None):
 
         l_bus_type.append(i_typ)
 
-    return l_bus_ids, d_bus_index_by_id, l_bus_type
+    l_bus_uknom_kv = []
+    l_bus_has_dg = []
+    l_bus_dg_capacity = []
+    l_bus_has_xnet = []
+
+    for s_bus_id, i_typ in zip(l_bus_ids, l_bus_type):
+        d_attrs = d_bus_attributes.get(s_bus_id) or {}
+        l_bus_uknom_kv.append(round(d_attrs.get("uknom_kv", 0.0), 3))
+        l_bus_has_dg.append(1 if (d_attrs.get("has_sync_dg", 0) or d_attrs.get("has_pv_dg", 0)) else 0)
+        l_bus_dg_capacity.append(round(d_attrs.get("dg_capacity_mva", 0.0), 4))
+        l_bus_has_xnet.append(d_attrs.get("has_xnet", 0))
+
+    return (
+        l_bus_ids,
+        d_bus_index_by_id,
+        l_bus_type,
+        l_bus_uknom_kv,
+        l_bus_has_dg,
+        l_bus_dg_capacity,
+        l_bus_has_xnet,
+    )
 
 
 def extract_directed_edge_features(rows, bus_idx):
@@ -449,6 +469,10 @@ def convert_scenario_to_graph_row(rows, meta, switch_status, bus_attributes=None
         l_bus_ids,
         d_bus_index_by_id,
         l_bus_type,
+        l_bus_uknom_kv,
+        l_bus_has_dg,
+        l_bus_dg_capacity_mva,
+        l_bus_has_xnet,
     ) = build_bus_index(l_rows, bus_attributes)
 
     (
@@ -536,6 +560,10 @@ def convert_scenario_to_graph_row(rows, meta, switch_status, bus_attributes=None
         "bus_number": len(l_bus_ids),
         "bus_id": l_bus_ids,
         "bus_typ": l_bus_type,
+        "bus_uknom_kv": l_bus_uknom_kv,
+        "bus_has_dg": l_bus_has_dg,
+        "bus_dg_capacity_mva": l_bus_dg_capacity_mva,
+        "bus_has_xnet": l_bus_has_xnet,
 
         **d_ybus_data,
         **d_directed_edge_data,

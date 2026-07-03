@@ -81,7 +81,6 @@ ML_READY_DIRECTED_EDGE_FEATURE_COLUMNS = [
     "directed_edge_count",
     "directed_edge_from_index",
     "directed_edge_to_index",
-    # directed_edge_line_is_in_service excluded: always 1 by construction
     "directed_edge_length_km",
     "directed_edge_r_ohm",
     "directed_edge_x_ohm",
