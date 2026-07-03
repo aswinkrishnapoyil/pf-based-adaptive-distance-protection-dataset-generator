@@ -3,6 +3,7 @@
 Generates structured datasets for training machine learning to predict adaptive distance-protection zone reach parameters in sub-transmission grids with distributed generation (DG).
 
 The pipeline connects to a live **DIgSILENT PowerFactory** session, iterates over switch-state topology configurations and randomized line/DG scenarios, runs short-circuit calculations per DG turbine to compute in-feed corrections, and exports flat CSV rows plus graph-array Parquet files ready for ML training.
+
 ---
 
 ## Repository Structure
