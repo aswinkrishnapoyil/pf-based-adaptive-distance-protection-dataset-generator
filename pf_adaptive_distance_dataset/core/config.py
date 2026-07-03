@@ -13,8 +13,8 @@ PROJECT_ROOT = SCRIPT_DIR
 
 RESULTS_DIR = PROJECT_ROOT / "Results"
 OUTPUT_DIR = RESULTS_DIR
-SWITCH_STATE_DIR = RESULTS_DIR / "Switch State"
-SWITCH_STATE_FILE = SWITCH_STATE_DIR / "Switch_state.csv"
+SWITCH_STATE_DIR = SCRIPT_DIR / "switch_state"
+SWITCH_STATE_FILE = SWITCH_STATE_DIR / "switch_states.csv"
 LOGS_DIR = SCRIPT_DIR / "logs"
 
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -34,7 +34,7 @@ class Config:
     SLAVE_STUDY_CASE_PREFIX = "SC_Slave"
     SLAVE_OPERATION_SCENARIO_PREFIX = "OS_Slave"
 
-    DATASET_VERSION = "v2.2"
+    DATASET_VERSION = "v2.4"
     DATASET_EXPORT_TYPE = "streaming_graph_array_with_metadata"
 
     # --- Grading Factor for Zone Reach ---
@@ -48,15 +48,15 @@ class Config:
 
     # --- Base Case & Randomization Volume ---
     INCLUDE_ORIGINAL_BASE_CASE = True
-    RANDOMIZED_SCENARIO_COUNT = 2
+    RANDOMIZED_SCENARIO_COUNT = 0
 
     # --- Line Parameter Randomization ---
-    ENABLE_LINE_RANDOMIZATION = True
+    ENABLE_LINE_RANDOMIZATION = False
     LINE_LENGTH_SCALE_MIN = 0.8
     LINE_LENGTH_SCALE_MAX = 1.2
 
     # --- Distributed Generation (DG) Randomization ---
-    ENABLE_DG_CAPACITY_RANDOMIZATION = True
+    ENABLE_DG_CAPACITY_RANDOMIZATION = False
     DG_CAPACITY_SCALE_MIN = 0.8
     DG_CAPACITY_SCALE_MAX = 1.2
 
