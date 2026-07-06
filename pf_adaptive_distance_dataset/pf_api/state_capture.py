@@ -203,7 +203,7 @@ def capture_original_state_from_active_slave(grid, app):
     # ------------------------------------------------------------
     # 3. Capture switch states
     # ------------------------------------------------------------
-    d_cubicle_lookup = build_cubicle_lookup(o_app)
+    d_cubicle_lookup = build_cubicle_lookup(o_app, o_grid)
 
     d_original_switch_states = {}
 

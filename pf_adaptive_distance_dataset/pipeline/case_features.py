@@ -591,11 +591,26 @@ def get_case_feature_dict_for_corridor(
         ),
     }
 
+    # logger.info(
+    #     f"Processed {i_case_index:03d} - {s_relay_node_name}: "
+    #     f"{s_relay_id} -> {s_protected_corridor_id} -> "
+    #     f"{s_subsequent_node_name} "
+    #     f"-> Z1: {d_case_row.get('target_zone1_r_reach_ohm', 0.0):.2f}|"
+    #     f"{d_case_row.get('target_zone1_x_reach_ohm', 0.0):.2f}, "
+    #     f"Z2: {d_case_row.get('target_zone2_r_reach_ohm', 0.0):.2f}|"
+    #     f"{d_case_row.get('target_zone2_x_reach_ohm', 0.0):.2f}, "
+    #     f"Z3: {d_case_row.get('target_zone3_r_reach_ohm', 0.0):.2f}|"
+    #     f"{d_case_row.get('target_zone3_x_reach_ohm', 0.0):.2f}"
+    # )
+
     logger.info(
         f"Processed {i_case_index:03d} - {s_relay_node_name}: "
         f"{s_relay_id} -> {s_protected_corridor_id} -> "
-        f"{s_subsequent_node_name} "
-        f"-> Z1: {d_case_row.get('target_zone1_r_reach_ohm', 0.0):.2f}|"
+        f"{s_subsequent_node_name} -> "
+        f"{d_case_row.get('zone2_selected_branch_id')} -> "
+        f"Z1={d_case_row.get('zone1_turbines_candidate_count', 0)} "
+        f"Z2={d_case_row.get('zone2_turbines_candidate_count', 0)} | "
+        f"Z1: {d_case_row.get('target_zone1_r_reach_ohm', 0.0):.2f}|"
         f"{d_case_row.get('target_zone1_x_reach_ohm', 0.0):.2f}, "
         f"Z2: {d_case_row.get('target_zone2_r_reach_ohm', 0.0):.2f}|"
         f"{d_case_row.get('target_zone2_x_reach_ohm', 0.0):.2f}, "

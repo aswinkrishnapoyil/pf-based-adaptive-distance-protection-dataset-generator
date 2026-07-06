@@ -104,18 +104,28 @@ def load_switch_state_dataframe():
     return df_switch_states, l_switch_columns
 
 
-def build_cubicle_lookup(app):
+def build_cubicle_lookup(app, grid=None):
     """
     Builds a lookup dictionary from CIM RDF ID to PowerFactory cubicle object.
+    If grid is provided, only cubicles whose parent terminal is inside that
+    grid are included — this prevents MV/LV grid cubicles from being toggled
+    when applying 110 kV switch-state configurations.
     """
 
     o_app = app
-
+    o_grid = grid
     d_cubicle_lookup = {}
 
     l_cubicles = o_app.GetCalcRelevantObjects("*.StaCubic") or []
 
     for o_cubicle in l_cubicles:
+
+        # If a grid filter is provided, skip cubicles outside it
+        if o_grid is not None:
+            o_terminal = _get_terminal_from_cubicle(o_cubicle)
+            if o_terminal is not None and not is_object_inside_grid(o_terminal, o_grid):
+                continue
+
         rdf_id = get_pf_attribute(o_cubicle, "cimRdfId")
 
         if not rdf_id:
