@@ -692,11 +692,9 @@ def get_parallel_protected_corridor_line_names(corr, all_corrs):
     d_parallel_line_names_by_key = {}
 
     for d_candidate_corridor in l_all_corridors:
-        s_candidate_busbar_pair = frozenset(
-            [
-                get_safe_full_name(d_candidate_corridor.get("relay_busbar")),
-                get_safe_full_name(d_candidate_corridor.get("subsequent_busbar")),
-            ]
+        s_candidate_busbar_pair = (
+            get_safe_full_name(d_candidate_corridor.get("relay_busbar")),
+            get_safe_full_name(d_candidate_corridor.get("subsequent_busbar")),
         )
 
         s_candidate_physical_line_key = get_physical_corridor_line_key(
