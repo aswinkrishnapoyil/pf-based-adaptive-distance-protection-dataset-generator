@@ -1,6 +1,7 @@
 # dataset_generator.py
 from __future__ import annotations
 
+import hashlib
 import logging
 from typing import Any, Generator
 
@@ -311,9 +312,8 @@ def _get_scenario_seeds(
     if b_is_base_case:
         return -1, -1
 
-    i_line_random_seed = (
-            abs(hash((Config.get_random_seed_base(), i_global_row_index, i_randomized_scenario_index))) % (2 ** 31)
-    )
+    _s_seed_key = f"{Config.get_random_seed_base()}_{i_global_row_index}_{i_randomized_scenario_index}".encode()
+    i_line_random_seed = int(hashlib.md5(_s_seed_key).hexdigest(), 16) % (2 ** 31)
 
     i_dg_random_seed = (
         i_line_random_seed
