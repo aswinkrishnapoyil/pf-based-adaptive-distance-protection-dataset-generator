@@ -232,8 +232,7 @@ def calculate_distance_zone_reaches_for_corridor(corr, p_summary, all_corrs=None
     """
     Calculates Zone 1, Zone 2, and Zone 3 distance-protection reaches.
 
-    The z2_branch parameter is preserved for interface compatibility. The
-    original implementation recalculates the Zone 2 branch group internally
+    The original implementation recalculates the Zone 2 branch group internally
     using select_zone2_downstream_branch_group(), so this replacement keeps
     the same behavior.
     """
