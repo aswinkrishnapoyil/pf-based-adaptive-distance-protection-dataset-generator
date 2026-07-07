@@ -680,11 +680,9 @@ def get_parallel_protected_corridor_line_names(corr, all_corrs):
     d_target_corridor = corr
     l_all_corridors = all_corrs
 
-    s_target_busbar_pair = frozenset(
-        [
-            get_safe_full_name(d_target_corridor.get("relay_busbar")),
-            get_safe_full_name(d_target_corridor.get("subsequent_busbar")),
-        ]
+    s_target_busbar_pair = (
+        get_safe_full_name(d_target_corridor.get("relay_busbar")),
+        get_safe_full_name(d_target_corridor.get("subsequent_busbar")),
     )
 
     s_target_physical_line_key = get_physical_corridor_line_key(
@@ -721,7 +719,7 @@ def get_parallel_protected_corridor_line_names(corr, all_corrs):
     )
 
 
-def select_zone2_downstream_branch_group(corr, l_all_corridors=None):
+def select_zone2_downstream_branch_group(corr, l_all_corridors=None, l_valid_branches=None):
     """
     Selects the Zone 2 downstream branch group.
     Branch groups are formed by remote busbar. For each group, the branch with
@@ -732,13 +730,13 @@ def select_zone2_downstream_branch_group(corr, l_all_corridors=None):
 
     d_corridor = corr
     l_corridors = l_all_corridors
-
     o_subsequent_busbar = d_corridor.get("subsequent_busbar")
 
-    l_valid_branches = filter_valid_downstream_branches_excluding_relay_return(
-        d_corridor,
-        l_corridors,
-    )
+    if l_valid_branches is None:
+        l_valid_branches = filter_valid_downstream_branches_excluding_relay_return(
+            d_corridor,
+            l_corridors,
+        )
 
     if not l_valid_branches:
         return {

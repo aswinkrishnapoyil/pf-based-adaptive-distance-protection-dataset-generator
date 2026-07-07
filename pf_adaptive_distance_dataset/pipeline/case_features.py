@@ -105,8 +105,7 @@ def get_case_feature_dict_for_corridor(
     )
 
     d_zone2_selection = select_zone2_downstream_branch_group(
-        d_corridor,
-        l_all_corridors,
+        d_corridor, l_all_corridors, l_valid_branches=l_valid_downstream_branches
     )
 
     d_zone2_branch = d_zone2_selection.get(
@@ -116,9 +115,9 @@ def get_case_feature_dict_for_corridor(
 
     d_zone_reaches = calculate_distance_zone_reaches_for_corridor(
         d_corridor,
-        d_zone2_branch,
         d_parallel_summary,
         l_all_corridors,
+        l_valid_branches=l_valid_downstream_branches
     )
 
     d_next_node_summary = summarize_next_node_downstream_context(
@@ -126,17 +125,19 @@ def get_case_feature_dict_for_corridor(
     )
 
     _d_zone3_branch = (
-        select_zone3_longest_valid_downstream_branch(
-            d_corridor,
-            l_all_corridors,
-        )
-        or build_empty_branch_summary(o_subsequent_busbar)
+            select_zone3_longest_valid_downstream_branch(
+                d_corridor,
+                l_all_corridors,
+                l_valid_branches=l_valid_downstream_branches,
+            )
+            or build_empty_branch_summary(o_subsequent_busbar)
     )
 
     i_parallel_group_count_forward, _i_max_parallel_branch_count = (
         count_forward_parallel_branch_groups_for_corridor(
             d_corridor,
             l_all_corridors,
+            l_valid_branches=l_valid_downstream_branches,
         )
     )
 

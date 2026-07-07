@@ -50,7 +50,7 @@ def select_parallel_branch_for_complex_zone2(sel_branch, par_branches):
     )[0]
 
 
-def select_zone3_longest_valid_downstream_branch(corr, l_all_corridors=None):
+def select_zone3_longest_valid_downstream_branch(corr, l_all_corridors=None, l_valid_branches=None):
     """
     Selects the longest valid downstream branch for Zone 3 reach.
     """
@@ -58,12 +58,13 @@ def select_zone3_longest_valid_downstream_branch(corr, l_all_corridors=None):
     d_corridor = corr
     l_corridors = l_all_corridors
 
-    l_valid_downstream_branches = (
-        filter_valid_downstream_branches_excluding_relay_return(
+    if l_valid_branches is None:
+        l_valid_branches = filter_valid_downstream_branches_excluding_relay_return(
             d_corridor,
-            l_corridors,
+            l_corridors
         )
-    )
+
+    l_valid_downstream_branches = l_valid_branches
 
     if not l_valid_downstream_branches:
         return build_empty_branch_summary(
@@ -80,10 +81,7 @@ def select_zone3_longest_valid_downstream_branch(corr, l_all_corridors=None):
     )[0]
 
 
-def count_forward_parallel_branch_groups_for_corridor(
-    corr,
-    l_all_corridors=None,
-):
+def count_forward_parallel_branch_groups_for_corridor(corr, l_all_corridors=None, l_valid_branches=None):
     """
     Counts downstream remote-busbar groups that contain parallel branches.
     """
@@ -91,12 +89,12 @@ def count_forward_parallel_branch_groups_for_corridor(
     d_corridor = corr
     l_corridors = l_all_corridors
 
-    l_valid_downstream_branches = (
-        filter_valid_downstream_branches_excluding_relay_return(
-            d_corridor,
-            l_corridors,
+    if l_valid_branches is None:
+        l_valid_branches = filter_valid_downstream_branches_excluding_relay_return(
+            d_corridor, l_corridors
         )
-    )
+
+    l_valid_downstream_branches = l_valid_branches
 
     d_branches_by_remote_busbar = defaultdict(list)
 
@@ -230,12 +228,7 @@ def calculate_complex_zone2_reach(
     )
 
 
-def calculate_distance_zone_reaches_for_corridor(
-    corr,
-    z2_branch,
-    p_summary,
-    all_corrs=None,
-):
+def calculate_distance_zone_reaches_for_corridor(corr, p_summary, all_corrs=None, l_valid_branches=None):
     """
     Calculates Zone 1, Zone 2, and Zone 3 distance-protection reaches.
 
@@ -246,7 +239,6 @@ def calculate_distance_zone_reaches_for_corridor(
     """
 
     d_corridor = corr
-    _d_input_zone2_branch = z2_branch
     d_parallel_summary = p_summary
     l_all_corridors = all_corrs
 
@@ -265,8 +257,7 @@ def calculate_distance_zone_reaches_for_corridor(
     )
 
     d_zone2_selection = select_zone2_downstream_branch_group(
-        d_corridor,
-        l_all_corridors,
+        d_corridor, l_all_corridors, l_valid_branches=l_valid_branches
     )
 
     d_zone2_branch = d_zone2_selection.get(
@@ -395,8 +386,7 @@ def calculate_distance_zone_reaches_for_corridor(
         s_zone2_impedance_basis = "simple_selected_downstream_branch_impedance"
 
     d_zone3_branch = select_zone3_longest_valid_downstream_branch(
-        d_corridor,
-        l_all_corridors,
+        d_corridor, l_all_corridors, l_valid_branches=l_valid_branches
     )
 
     f_zone3_branch_r_ohm = float(
