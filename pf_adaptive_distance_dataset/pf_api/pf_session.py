@@ -91,16 +91,12 @@ class PowerFactorySession:
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, _exc_type, _exc_val, _exc_tb):
         """
         Cleans up Python-side PowerFactory references when leaving the session.
         This does not close PowerFactory. It resets calculation state where
         possible, releases object references, and runs garbage collection.
         """
-
-        _o_exception_type = exc_type
-        _o_exception_value = exc_val
-        _o_exception_traceback = exc_tb
 
         if self.app:
             logger.info("Closing PowerFactory Session context.")
