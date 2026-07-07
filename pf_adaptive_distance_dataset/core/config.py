@@ -48,7 +48,7 @@ class Config:
 
     # --- Base Case & Randomization Volume ---
     INCLUDE_ORIGINAL_BASE_CASE = True
-    RANDOMIZED_SCENARIO_COUNT = 0
+    RANDOMIZED_SCENARIO_COUNT = 2
 
     # --- Line Parameter Randomization ---
     ENABLE_LINE_RANDOMIZATION = False

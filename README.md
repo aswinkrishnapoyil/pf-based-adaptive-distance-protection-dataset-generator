@@ -121,8 +121,8 @@ INCLUDE_ORIGINAL_BASE_CASE      = True
 RANDOMIZED_SCENARIO_COUNT       = 2      # randomised scenarios per switch state
 ```
 
-Example with defaults and 93 switch states:
-`93 switch states × (1 base + 2 randomised) = 279 scenario runs ≈ 4,500 flat rows`
+Example with defaults and 86 switch states:
+`86 switch states × (1 base + 2 randomised) = 258 scenario runs ≈ 4,200 flat rows`
 
 ### Randomisation Controls
 
@@ -162,13 +162,12 @@ The seed used in each run is logged and stored in the metadata JSON so any run c
 switch_state/switch_states.csv
 ```
 
-The canonical switch state library is version controlled at `switch_state/switch_states.csv`. It contains **93 switch states** covering:
+The canonical switch state library is version controlled at `switch_state/switch_states.csv`. It contains **86 switch states** covering:
 
 - All 8 single-line outages
 - All 28 double-line outage combinations
-- 6 triple-line outages (extreme topology reductions)
+- 4 triple-line outages (extreme topology reductions)
 - 24 states combining line outages with DG outages
-- Individual DG-only states for all 13 DG/feeder switches
 
 Each row is one topology configuration. Columns named `switch_<CIM-RDF-ID>` contain `0` (open) or `1` (closed) for each switchable cubicle in the grid.
 
