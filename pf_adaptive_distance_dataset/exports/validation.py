@@ -40,7 +40,11 @@ def validate_case(case: dict, numeric_columns: list) -> Tuple[bool, Optional[str
             and isinstance(value, (int, float))
             and not math.isnan(value)
         ):
-            if value < -100 or value > 10000:
+
+            if value < -1e-6:
+                return False, f"negative_zone_reach_{s_column}_{value}"
+
+            if value > 10000:
                 return False, f"zone_reach_out_of_range_{s_column}_{value}"
 
         if (

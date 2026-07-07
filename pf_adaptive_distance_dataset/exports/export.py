@@ -321,8 +321,10 @@ def _write_flat_rows_csv(path: Path, rows: list[dict]) -> None:
 
 def _write_graph_rows_parquet(path: Path, graph_rows: list[dict]) -> None:
     """
-    Appends graph-array scenario rows to a Parquet file.
-    If the file already exists, it is read, concatenated, and rewritten.
+    Writes graph-array scenario rows to a Parquet file.
+    Always receives the full in-memory accumulation (l_all_graph_rows), so it
+    simply overwrites the file. This avoids the read-concat-rewrite pattern
+    that was O(n²) in I/O and silently duplicated rows on every checkpoint call.
     """
 
     p_graph_parquet_path = path
@@ -333,35 +335,7 @@ def _write_graph_rows_parquet(path: Path, graph_rows: list[dict]) -> None:
     if not l_graph_rows:
         return
 
-    df_new_graph_rows = pd.DataFrame(l_graph_rows)
-
-    if p_graph_parquet_path.exists() and p_graph_parquet_path.stat().st_size > 0:
-        try:
-            df_existing_graph_rows = pd.read_parquet(
-                p_graph_parquet_path,
-                engine="pyarrow",
-            )
-
-            df_output_graph_rows = pd.concat(
-                [
-                    df_existing_graph_rows,
-                    df_new_graph_rows,
-                ],
-                ignore_index=True,
-            )
-
-        except Exception as o_error:
-            logger.warning(
-                "Could not append to existing Parquet file; "
-                f"rewriting new data only: {o_error}"
-            )
-
-            df_output_graph_rows = df_new_graph_rows
-
-    else:
-        df_output_graph_rows = df_new_graph_rows
-
-    df_output_graph_rows.to_parquet(
+    pd.DataFrame(l_graph_rows).to_parquet(
         p_graph_parquet_path,
         engine="pyarrow",
         index=False,
@@ -565,6 +539,7 @@ def stream_export_and_audit(
     d_statistics = DatasetStatistics()
 
     i_global_case_id = 0
+    i_graph_rows_since_last_checkpoint = 0
 
     l_valid_rows_for_statistics: list[dict] = []
     l_audit_rows: list[dict] = []
@@ -600,7 +575,7 @@ def stream_export_and_audit(
                 i_global_case_id += 1
 
                 d_export_row = dict(d_row)
-                d_export_row["scenario_case_id"] = d_export_row.get("case_id")
+                d_export_row["scenario_case_id"] = int(d_export_row.get("case_id", 0))
                 d_export_row["case_id"] = i_global_case_id
 
                 d_statistics.total_cases_valid += 1
@@ -653,14 +628,16 @@ def stream_export_and_audit(
             )
 
             # Checkpoint flush every 50 scenarios for crash recovery
-            if len(l_all_graph_rows) % 50 == 0:
+            i_graph_rows_since_last_checkpoint += len(l_graph_rows)
+            if i_graph_rows_since_last_checkpoint >= 50:
+                i_graph_rows_since_last_checkpoint = 0
                 _write_graph_rows_parquet(
                     p_graph_parquet_path,
-                    l_all_graph_rows,
+                    l_all_graph_rows
                 )
                 _write_graph_rows_parquet(
                     p_ml_ready_graph_parquet_path,
-                    l_all_ml_ready_graph_rows,
+                    l_all_ml_ready_graph_rows
                 )
 
         if o_payload.line_logs:
