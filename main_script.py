@@ -4,6 +4,7 @@ from __future__ import annotations
 import sys
 import logging
 from datetime import datetime
+import time
 
 from pf_adaptive_distance_dataset.core.config import (
     Config,
@@ -58,6 +59,31 @@ def main():
     """
 
     Config.get_random_seed_base()  # initialise seed once at run start before any parallel/threaded use
+
+    # ------------------------------------------------------------------
+    # Guard: abort before loading data or opening PowerFactory
+    # ------------------------------------------------------------------
+    if Config.RANDOMIZED_SCENARIO_COUNT > 0:
+        if (
+                not Config.ENABLE_LINE_RANDOMIZATION
+                and not Config.ENABLE_DG_CAPACITY_RANDOMIZATION
+        ):
+            logger.warning(
+                "RANDOMIZED_SCENARIO_COUNT=%d but both ENABLE_LINE_RANDOMIZATION "
+                "and ENABLE_DG_CAPACITY_RANDOMIZATION are False. "
+                "All randomized scenarios would be identical to the base case, "
+                "producing duplicate rows in the dataset. "
+                "Aborting in 10 seconds — Fix the config.py.",
+                Config.RANDOMIZED_SCENARIO_COUNT,
+            )
+
+            time.sleep(10)
+
+            raise RuntimeError(
+                "Aborted: RANDOMIZED_SCENARIO_COUNT > 0 but no randomization is enabled. "
+                "Enable ENABLE_LINE_RANDOMIZATION or ENABLE_DG_CAPACITY_RANDOMIZATION, "
+                "or set RANDOMIZED_SCENARIO_COUNT = 0."
+            )
 
     df_switch_states, l_switch_columns = load_switch_state_dataframe()
 
