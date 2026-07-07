@@ -11,10 +11,6 @@ from .pf_utils import get_safe_name
 logger = logging.getLogger(__name__)
 
 
-sys.path.append(Config.PF_PYTHON_PATH)
-import powerfactory
-
-
 class PowerFactorySession:
     """
     Context manager for PowerFactory initialization and cleanup.
@@ -49,6 +45,9 @@ class PowerFactorySession:
             PowerFactorySession:
                 The active session object containing app, project, and grid.
         """
+
+        sys.path.append(Config.PF_PYTHON_PATH)
+        import powerfactory
 
         logger.info("Connecting to PowerFactory...")
 

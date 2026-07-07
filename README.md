@@ -14,10 +14,6 @@ pf-based-adaptive-distance-protection-dataset-generator/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-├── inspect_grid_bus_types.py             ← standalone diagnostic: maps terminals to bus_typ codes
-├── generate_switch_states.py             ← automated switch-state generator (no GUI needed)
-├── create_manual_switch_state_library.py ← manual switch-state recorder via PowerFactory GUI
-├── view_parquet.py                       ← diagnostic viewer for generated Parquet files
 ├── switch_state/
 │   └── switch_states.csv                ← canonical switch-state library (93 states, version-controlled)
 └── pf_adaptive_distance_dataset/
