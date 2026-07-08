@@ -34,7 +34,7 @@ class Config:
     SLAVE_STUDY_CASE_PREFIX = "SC_Slave"
     SLAVE_OPERATION_SCENARIO_PREFIX = "OS_Slave"
 
-    DATASET_VERSION = "v2.4"
+    DATASET_VERSION = "v2.4.2"
     DATASET_EXPORT_TYPE = "streaming_graph_array_with_metadata"
 
     # --- Grading Factor for Zone Reach ---
@@ -48,19 +48,19 @@ class Config:
 
     # --- Base Case & Randomization Volume ---
     INCLUDE_ORIGINAL_BASE_CASE = True
-    RANDOMIZED_SCENARIO_COUNT = 2
+    RANDOMIZED_SCENARIO_COUNT = 25
 
     # --- Line Parameter Randomization ---
-    ENABLE_LINE_RANDOMIZATION = False
+    ENABLE_LINE_RANDOMIZATION = True
     LINE_LENGTH_SCALE_MIN = 0.8
     LINE_LENGTH_SCALE_MAX = 1.2
 
     # --- Distributed Generation (DG) Randomization ---
-    ENABLE_DG_CAPACITY_RANDOMIZATION = False
+    ENABLE_DG_CAPACITY_RANDOMIZATION = True
     DG_CAPACITY_SCALE_MIN = 0.8
     DG_CAPACITY_SCALE_MAX = 1.2
 
-    RANDOM_SEED_BASE: Optional[int] = None
+    RANDOM_SEED_BASE: Optional[int] = 20260707  # Set as None to get auto generated seed base
     DG_CAPACITY_RANDOM_SEED_OFFSET = 100000
 
     @classmethod
@@ -72,6 +72,10 @@ class Config:
             cls.RANDOM_SEED_BASE = seed
             logging.getLogger(__name__).info(
                 f"Auto-generated RANDOM_SEED_BASE: {cls.RANDOM_SEED_BASE}"
+            )
+        else:
+            logging.getLogger(__name__).info(
+                f"Using hardcoded RANDOM_SEED_BASE: {cls.RANDOM_SEED_BASE}"
             )
         return cls.RANDOM_SEED_BASE
 
